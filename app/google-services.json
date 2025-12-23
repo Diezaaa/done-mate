@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "467647500308",
+    "project_id": "donemate-78ef0",
+    "storage_bucket": "donemate-78ef0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:467647500308:android:12b2af9d5069e5a6519701",
+        "android_client_info": {
+          "package_name": "com.example.donemate"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "467647500308-enmrlsui96c4dvi4g5950b0f8a4ogd8s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.donemate",
+            "certificate_hash": "d2ba90ad4c91b7476fc402458b6fff8c840762a1"
+          }
+        },
+        {
+          "client_id": "467647500308-3pvm36gcibp7oirfqh54leqbau584blf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-dQXk5510zUlomL3obUNiEYntHLKzGOA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "467647500308-3pvm36gcibp7oirfqh54leqbau584blf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

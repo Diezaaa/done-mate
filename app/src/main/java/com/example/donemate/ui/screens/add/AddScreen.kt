@@ -34,12 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.donemate.model.Progress
+import com.example.donemate.ui.common.CameraOrGalleryDialog
 
 @Composable
-fun AddScreen(vm: AddViewModel, navigateToTasks: () -> Boolean) {
+fun AddScreen(vm: AddViewModel, navigateToTasks: () -> Boolean, navigateToPermission: () -> Unit) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
     var expanded by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
     Row(modifier = Modifier.fillMaxSize(),
         verticalAlignment = Alignment.CenterVertically,
@@ -53,6 +55,17 @@ fun AddScreen(vm: AddViewModel, navigateToTasks: () -> Boolean) {
                 fontSize = 35.sp
             )
             Spacer(Modifier.height(15.dp))
+
+
+            Spacer(Modifier.height(15.dp))
+
+            if (showDialog) {
+                CameraOrGalleryDialog(
+                    onDismissRequest = { showDialog = false },
+                    onChoosingCamera = { navigateToPermission() },
+                    onChoosingGallery = { /* action */ }
+                )
+            }
 
             TextField(
                 value = uiState.title,
@@ -106,6 +119,9 @@ fun AddScreen(vm: AddViewModel, navigateToTasks: () -> Boolean) {
             }
 
             Spacer(Modifier.height(8.dp))
+            Button(onClick = { showDialog = true}){
+                Text("Set image")
+            }
 
             Button(
                 onClick = {vm.onSaveTask()
@@ -117,3 +133,4 @@ fun AddScreen(vm: AddViewModel, navigateToTasks: () -> Boolean) {
         }
     }
 }
+

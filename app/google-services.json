@@ -1,41 +1,49 @@
 {
   "project_info": {
-    "project_number": "467647500308",
-    "project_id": "donemate-78ef0",
-    "storage_bucket": "donemate-78ef0.firebasestorage.app"
+    "project_number": "414589668560",
+    "project_id": "donemate-4aaf1",
+    "storage_bucket": "donemate-4aaf1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:467647500308:android:12b2af9d5069e5a6519701",
+        "mobilesdk_app_id": "1:414589668560:android:715ae28819bfef3b2f22d5",
         "android_client_info": {
           "package_name": "com.example.donemate"
         }
       },
       "oauth_client": [
         {
-          "client_id": "467647500308-enmrlsui96c4dvi4g5950b0f8a4ogd8s.apps.googleusercontent.com",
+          "client_id": "414589668560-a8ed10ft54jfctf7con0aba6ctki553d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.donemate",
-            "certificate_hash": "d2ba90ad4c91b7476fc402458b6fff8c840762a1"
+            "certificate_hash": "6475b51dadaa32ad8815c01a190599f794bc2df8"
           }
         },
         {
-          "client_id": "467647500308-3pvm36gcibp7oirfqh54leqbau584blf.apps.googleusercontent.com",
+          "client_id": "414589668560-c493993fgqm0k75bq954n0gbqi0tp69f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.donemate",
+            "certificate_hash": "b9739a1ab8a0f5aa10018678f85f648971f5a07a"
+          }
+        },
+        {
+          "client_id": "414589668560-n5geus8c7a1pkkgj5qrufg5dffi18tl5.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD-dQXk5510zUlomL3obUNiEYntHLKzGOA"
+          "current_key": "AIzaSyDX5CagKYRlLLEWBtksvVx361KMc45Xmh0"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "467647500308-3pvm36gcibp7oirfqh54leqbau584blf.apps.googleusercontent.com",
+              "client_id": "414589668560-n5geus8c7a1pkkgj5qrufg5dffi18tl5.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

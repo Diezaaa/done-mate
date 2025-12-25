@@ -38,6 +38,7 @@ import com.example.donemate.ui.screens.account.AccountScreen
 import com.example.donemate.ui.screens.account.AccountViewModel
 import com.example.donemate.ui.screens.link_account.LinkAccountScreen
 import com.example.donemate.ui.screens.link_account.LinkAccountViewModel
+import com.example.donemate.ui.screens.permission.PermissionScreen
 import com.example.donemate.ui.screens.reset_password.ResetPasswordScreen
 import com.example.donemate.ui.screens.reset_password.ResetPasswordViewModel
 
@@ -67,6 +68,9 @@ data object Account : TopLevelRoute { override val icon = Icons.Default.AccountC
 
 @Serializable
 data object ResetPassword : NavKey
+
+@Serializable
+data object Permission : NavKey
 
 private val TOP_LEVEL_ROUTES : List<TopLevelRoute> = listOf(Tasks, Account)
 
@@ -158,6 +162,9 @@ fun DoneMateApp() {
                         AddScreen(
                             navigateToTasks = {backStack.removeLastOrNull()
                                 backStack.add(Tasks)},
+                            navigateToPermission = {
+                                backStack.add(Permission)
+                            },
                             vm = vm
                         )
                     }
@@ -190,6 +197,9 @@ fun DoneMateApp() {
                             },
                             vm = vm
                         )
+                    }
+                    entry<Permission>{
+                        PermissionScreen()
                     }
                 }
             )

@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material:material-icons-extended:${libs.androidx.compose.material3}")
+    implementation(libs.camera.lifecycle)
+    implementation(libs.androidx.camera.video)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -87,4 +89,11 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
+
+    // Camera
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.compose)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.camera2)
+    implementation("com.google.guava:guava:33.0.0-android")
 }

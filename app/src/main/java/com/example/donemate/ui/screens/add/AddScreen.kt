@@ -1,5 +1,6 @@
 package com.example.donemate.ui.screens.add
 
+import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,9 +36,18 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.donemate.model.Progress
 import com.example.donemate.ui.common.CameraOrGalleryDialog
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun AddScreen(vm: AddViewModel, navigateToTasks: () -> Boolean, navigateToPermission: () -> Unit) {
+fun AddScreen(
+    vm: AddViewModel,
+    navigateToTasks: () -> Boolean,
+    navigateToPermission: (taskTitle: String) -> Unit,
+    onNavigateToPreview: (taskTitle: String) -> Unit
+) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
     var expanded by remember { mutableStateOf(false) }
@@ -59,11 +69,22 @@ fun AddScreen(vm: AddViewModel, navigateToTasks: () -> Boolean, navigateToPermis
 
             Spacer(Modifier.height(15.dp))
 
+            val cameraPermissionState = rememberPermissionState(
+                Manifest.permission.CAMERA
+            )
+
             if (showDialog) {
                 CameraOrGalleryDialog(
                     onDismissRequest = { showDialog = false },
-                    onChoosingCamera = { navigateToPermission() },
-                    onChoosingGallery = { /* action */ }
+                    onChoosingCamera = {
+                        if (!cameraPermissionState.status.isGranted){
+                            navigateToPermission(uiState.title)
+                        }
+                        else{
+                            onNavigateToPreview(uiState.title)
+                        }
+                   },
+                    onChoosingGallery = {}
                 )
             }
 

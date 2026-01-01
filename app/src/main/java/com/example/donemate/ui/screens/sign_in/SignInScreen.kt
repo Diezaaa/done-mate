@@ -49,6 +49,7 @@ fun SignInScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+        delay(2_000)
         launchCredManBottomSheet(context) { result ->
             vm.onSignInWithGoogle(result)
         }

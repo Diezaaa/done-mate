@@ -39,6 +39,8 @@ import com.example.donemate.ui.screens.account.AccountViewModel
 import com.example.donemate.ui.screens.link_account.LinkAccountScreen
 import com.example.donemate.ui.screens.link_account.LinkAccountViewModel
 import com.example.donemate.ui.screens.permission.PermissionScreen
+import com.example.donemate.ui.screens.preview.PreviewScreen
+import com.example.donemate.ui.screens.preview.PreviewViewModel
 import com.example.donemate.ui.screens.reset_password.ResetPasswordScreen
 import com.example.donemate.ui.screens.reset_password.ResetPasswordViewModel
 
@@ -70,7 +72,10 @@ data object Account : TopLevelRoute { override val icon = Icons.Default.AccountC
 data object ResetPassword : NavKey
 
 @Serializable
-data object Permission : NavKey
+data class Permission(val taskTitle: String) : NavKey
+
+@Serializable
+data class Preview(val taskTitle: String) : NavKey
 
 private val TOP_LEVEL_ROUTES : List<TopLevelRoute> = listOf(Tasks, Account)
 
@@ -115,7 +120,6 @@ fun DoneMateApp() {
                     viewModelDecorator
                 ),
                 modifier = Modifier
-                    .systemBarsPadding()
                     .padding(innerPadding)
                     .padding(10.dp, 0.dp),
                 entryProvider = entryProvider {
@@ -162,8 +166,11 @@ fun DoneMateApp() {
                         AddScreen(
                             navigateToTasks = {backStack.removeLastOrNull()
                                 backStack.add(Tasks)},
-                            navigateToPermission = {
-                                backStack.add(Permission)
+                            navigateToPermission = { taskTitle ->
+                                backStack.add(Permission(taskTitle))
+                            },
+                            onNavigateToPreview = { taskTitle ->
+                                backStack.add(Preview(taskTitle))
                             },
                             vm = vm
                         )
@@ -198,8 +205,18 @@ fun DoneMateApp() {
                             vm = vm
                         )
                     }
-                    entry<Permission>{
-                        PermissionScreen()
+                    entry<Permission>{ taskTitle ->
+                    PermissionScreen(
+                            onNavigateToPreview = {
+                                backStack.removeLastOrNull()
+                                backStack.add(Preview(taskTitle.taskTitle))
+                            },
+                            taskTitle = taskTitle.taskTitle
+                        )
+                    }
+                    entry<Preview>{ taskTitle ->
+                        val vm = hiltViewModel<PreviewViewModel>()
+                        PreviewScreen(taskTitle = taskTitle.taskTitle,viewModel = vm)
                     }
                 }
             )

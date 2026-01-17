@@ -5,8 +5,8 @@ import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.model.service.AccountService
-import com.example.donemate.model.service.impl.AuthResult
+import com.example.donemate.domain.remote.AccountService
+import com.example.donemate.data.remote.AuthResult
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import dagger.hilt.android.lifecycle.HiltViewModel

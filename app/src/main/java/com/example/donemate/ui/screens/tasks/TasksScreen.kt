@@ -37,15 +37,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.model.Task
+import com.example.donemate.data.remote.models.Task
+import com.example.donemate.R
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import com.example.donemate.model.Progress
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
+import com.example.donemate.data.remote.models.Progress
 
 @Composable
 fun TasksScreen(
     vm: TasksViewModel,
-    navigateToEdit: (task: String) -> Unit,
+    navigateToEdit: (id: String, title: String) -> Unit,
     navigateToAdd: () -> Boolean
 ) {
     val tasks by vm.tasks.collectAsStateWithLifecycle(emptyList())
@@ -80,7 +85,7 @@ fun TaskItem(
     task: Task,
     onTaskCheckChange: (Task, Int) -> Unit,
     onDeleteTask: (Task) -> Unit,
-    navigateToEdit: (task: String) -> Unit
+    navigateToEdit: (id: String, title: String) -> Unit
 ){
     var expanded by remember { mutableStateOf(false) }
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
@@ -90,6 +95,15 @@ fun TaskItem(
             modifier = Modifier.padding(16.dp).fillMaxWidth()
         ) {
             Row {
+                Column(modifier = Modifier.width(100.dp).height(100.dp).padding(10.dp)){
+                    AsyncImage(
+                        model = task.imageUri,
+                        contentDescription = "image of a task",
+                        placeholder = painterResource(R.drawable.ic_launcher_background),
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier.clip(RoundedCornerShape(2.dp))
+                    )
+                }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(task.title, fontSize = 24.sp)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -146,7 +160,7 @@ fun TaskItem(
                         )){
                         Text("Delete")
                     }
-                    Button(onClick = { navigateToEdit(task.id) },
+                    Button(onClick = { navigateToEdit(task.id, task.title) },
                         modifier = Modifier.width(100.dp)){
                         Text("Edit")
                     }

@@ -1,5 +1,6 @@
 package com.example.donemate.ui.screens.task
 
+import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,14 +36,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.model.Progress
+import com.example.donemate.data.remote.models.Progress
+import com.example.donemate.ui.components.CameraOrGalleryDialog
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun EditScreen(id: String, vm: EditViewModel, navigateToTasks: () -> Boolean) {
+fun EditScreen(
+    id: String,
+    vm: EditViewModel,
+    navigateToTasks: () -> Boolean,
+    navigateToPermission: () -> Unit,
+    onNavigateToPreview: () -> Unit
+) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
     var expanded by rememberSaveable { mutableStateOf(false) }
-
+    var showDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         vm.loadTask(id)
@@ -111,7 +123,28 @@ fun EditScreen(id: String, vm: EditViewModel, navigateToTasks: () -> Boolean) {
                     }
                 }
             }
+            val cameraPermissionState = rememberPermissionState(
+                Manifest.permission.CAMERA
+            )
 
+            if (showDialog) {
+                CameraOrGalleryDialog(
+                    onDismissRequest = { showDialog = false },
+                    onChoosingCamera = {
+                        if (!cameraPermissionState.status.isGranted){
+                            navigateToPermission()
+                        }
+                        else{
+                            onNavigateToPreview()
+                        }
+                    },
+                    onChoosingGallery = {}
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = { showDialog = true}){
+                Text("Set image")
+            }
             Spacer(Modifier.height(8.dp))
 
             Button(

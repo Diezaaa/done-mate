@@ -1,16 +1,10 @@
 package com.example.donemate.ui.screens.tasks
 
-import android.util.Log
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.model.Task
-import com.example.donemate.model.service.AccountService
-import com.example.donemate.model.service.StorageService
+import com.example.donemate.data.remote.models.Task
+import com.example.donemate.domain.remote.StorageService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

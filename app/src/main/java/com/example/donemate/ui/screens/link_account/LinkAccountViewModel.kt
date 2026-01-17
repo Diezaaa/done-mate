@@ -1,18 +1,16 @@
 package com.example.donemate.ui.screens.link_account
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.model.User
-import com.example.donemate.model.service.AccountService
-import com.example.donemate.model.service.impl.AuthResult
+import com.example.donemate.data.remote.models.User
+import com.example.donemate.domain.remote.AccountService
+import com.example.donemate.data.remote.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject

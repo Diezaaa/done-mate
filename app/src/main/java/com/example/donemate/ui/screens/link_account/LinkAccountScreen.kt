@@ -1,8 +1,5 @@
 package com.example.donemate.ui.screens.link_account
 
-import android.util.Log
-import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,8 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.model.service.impl.AuthResult
-import com.example.donemate.ui.screens.sign_up.SignUpViewModel
+import com.example.donemate.data.remote.AuthResult
 import kotlinx.coroutines.delay
 
 @Composable

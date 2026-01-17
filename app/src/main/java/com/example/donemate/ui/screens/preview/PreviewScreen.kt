@@ -1,24 +1,20 @@
 package com.example.donemate.ui.screens.preview
 
-import android.widget.Toast
+import android.net.Uri
+import android.util.Log
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,25 +44,21 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.geometry.takeOrElse
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.ui.common.CameraScreenUiState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import java.io.File
+import kotlinx.coroutines.launch
 import java.util.UUID
 @Composable
 fun PreviewScreen(
     taskTitle: String,
     viewModel: PreviewViewModel,
     modifier: Modifier = Modifier,
+    onNavigateToTask: (uri: Uri?) -> Unit,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
@@ -79,8 +72,6 @@ fun PreviewScreen(
     val autofocusRequestId = autofocusRequest.first
     val showAutofocusIndicator = autofocusRequest.second.isSpecified
     val autofocusCoords = remember(autofocusRequestId) { autofocusRequest.second }
-    val currentContext = LocalContext.current
-
     if (showAutofocusIndicator) {
         LaunchedEffect(autofocusRequestId) {
             delay(1000)
@@ -123,7 +114,10 @@ fun PreviewScreen(
                                 .pointerInput(viewModel, coordinateTransformer) {
                                     // Detect tap for focus
                                     detectTapGestures { tapCoords ->
-
+                                        with(coordinateTransformer) {
+                                            viewModel.tapToFocus(tapCoords.transform())
+                                        }
+                                        autofocusRequest = UUID.randomUUID() to tapCoords
                                     }
                                 }
                                 .pointerInput(viewModel, coordinateTransformer) {
@@ -150,6 +144,7 @@ fun PreviewScreen(
 }
 
             }
+            val coroutineScope = rememberCoroutineScope()
 
             Box(
                 modifier = Modifier
@@ -160,7 +155,13 @@ fun PreviewScreen(
                 // Centered button (on the left)
                 Button(
                     onClick = {
-                    },
+                        coroutineScope.launch {
+                            val uri = viewModel.capture()
+                            Log.d("uri", uri.toString())
+                            onNavigateToTask(uri)
+
+                        }
+                  },
                     modifier = Modifier.align(Alignment.Center)
                 ) {
                     Text("Set this as task image")
@@ -168,7 +169,7 @@ fun PreviewScreen(
 
                 // Zoom text (on the right)
                 Text(
-                    text = String.format("%.2f x", uiState.zoomRatio),
+                    text = "${"%.1f".format(uiState.zoomRatio.toDouble())}x",
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
@@ -180,11 +181,11 @@ fun PreviewScreen(
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 )
                 Icon(
-                    imageVector = if (uiState.isTorchOn) {
+                    imageVector = if (uiState.torchOn) {
                         Icons.Default.FlashlightOn
                     } else {
                         Icons.Default.FlashlightOff
-                    }, contentDescription = if (uiState.isTorchOn) "Flashlight On" else "Flashlight Off",
+                    }, contentDescription = if (uiState.torchOn) "Flashlight On" else "Flashlight Off",
                     modifier = Modifier
                         .size(30.dp)
                         .clickable{viewModel.toggleTorch()}

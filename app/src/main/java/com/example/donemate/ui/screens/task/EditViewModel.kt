@@ -2,8 +2,10 @@ package com.example.donemate.ui.screens.task
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.model.Task
-import com.example.donemate.model.service.StorageService
+import com.example.donemate.data.local.TaskPicturesRepositoryImpl
+import com.example.donemate.data.remote.models.Task
+import com.example.donemate.domain.remote.MediaStorage
+import com.example.donemate.domain.remote.StorageService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditViewModel @Inject constructor(
+    private val taskPicturesRepository: TaskPicturesRepositoryImpl,
     private val storageService: StorageService
 ) : ViewModel()  {
     private val _uiState = MutableStateFlow(Task())
@@ -25,7 +28,6 @@ class EditViewModel @Inject constructor(
         if (!hasLoaded) {
             hasLoaded = true
             viewModelScope.launch {
-                // Run I/O safely on the IO dispatcher
                 val task = withContext(Dispatchers.IO) {
                     storageService.getTask(id)
                 }
@@ -52,6 +54,7 @@ class EditViewModel @Inject constructor(
     fun onSaveTask(){
         viewModelScope.launch(Dispatchers.IO) {
             storageService.update(_uiState.value)
+            taskPicturesRepository.updateTaskPictureAndDeleteOld(_uiState.value.id, _uiState.value.imageUri)
         }
     }
 }

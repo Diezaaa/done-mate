@@ -34,8 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.model.Progress
-import com.example.donemate.ui.common.CameraOrGalleryDialog
+import com.example.donemate.data.remote.models.Progress
+import com.example.donemate.ui.components.CameraOrGalleryDialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -46,12 +46,14 @@ fun AddScreen(
     vm: AddViewModel,
     navigateToTasks: () -> Boolean,
     navigateToPermission: (taskTitle: String) -> Unit,
-    onNavigateToPreview: (taskTitle: String) -> Unit
+    onNavigateToPreview: (taskTitle: String) -> Unit,
+    imageUri: String?
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
     var expanded by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
+
 
     Row(modifier = Modifier.fillMaxSize(),
         verticalAlignment = Alignment.CenterVertically,
@@ -145,8 +147,8 @@ fun AddScreen(
             }
 
             Button(
-                onClick = {vm.onSaveTask()
-                    navigateToTasks()},
+                onClick = {
+                    vm.onSaveTask(imageUri) },
                 modifier = Modifier.width(283.dp)
             ) {
                 Text("Create")

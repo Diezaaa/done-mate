@@ -26,10 +26,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.model.service.impl.AuthResult
+import com.example.donemate.data.remote.AuthResult
 import androidx.compose.material3.SnackbarHost
-import com.example.donemate.ui.common.AuthenticationButton
-import com.example.donemate.ui.common.launchCredManBottomSheet
+import com.example.donemate.ui.components.AuthenticationButton
+import com.example.donemate.ui.components.launchCredManBottomSheet
 
 
 @Composable

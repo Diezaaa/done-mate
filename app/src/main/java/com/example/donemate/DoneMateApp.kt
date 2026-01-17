@@ -1,7 +1,7 @@
 package com.example.donemate
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Menu
@@ -43,6 +43,7 @@ import com.example.donemate.ui.screens.preview.PreviewScreen
 import com.example.donemate.ui.screens.preview.PreviewViewModel
 import com.example.donemate.ui.screens.reset_password.ResetPasswordScreen
 import com.example.donemate.ui.screens.reset_password.ResetPasswordViewModel
+import com.example.donemate.data.remote.models.Task
 
 @Serializable
 data object SignUp : NavKey
@@ -54,10 +55,10 @@ data object SignIn : NavKey
 data object Tasks : TopLevelRoute { override val icon = Icons.Default.Menu }
 
 @Serializable
-data class Edit(val id: String) : NavKey
+data class Edit(val id: String, val title: String, val uri: String? = null) : NavKey
 
 @Serializable
-data object Add : NavKey
+data class Add(val uri: String?) : NavKey
 
 @Serializable
 data object LinkAccount : NavKey
@@ -147,8 +148,8 @@ fun DoneMateApp() {
                     entry<Tasks> {
                         val viewModel = hiltViewModel<TasksViewModel>()
                         TasksScreen(
-                            navigateToAdd = { backStack.add(Add) },
-                            navigateToEdit = { taskId -> backStack.add(Edit(taskId)) },
+                            navigateToAdd = { backStack.add(Add(null)) },
+                            navigateToEdit = { id, title -> backStack.add(Edit(id, title)) },
                             vm = viewModel
                         )
                     }
@@ -157,11 +158,17 @@ fun DoneMateApp() {
                         EditScreen(
                             navigateToTasks = {backStack.removeLastOrNull()
                                 backStack.add(Tasks)},
+                            navigateToPermission = {
+                                backStack.add(Permission(task.title))
+                            },
+                            onNavigateToPreview = {
+                                backStack.add(Preview(task.title))
+                            },
                             id = task.id,
                             vm = vm
                         )
                     }
-                    entry<Add> {
+                    entry<Add> { capture ->
                         val vm = hiltViewModel<AddViewModel>()
                         AddScreen(
                             navigateToTasks = {backStack.removeLastOrNull()
@@ -172,6 +179,7 @@ fun DoneMateApp() {
                             onNavigateToPreview = { taskTitle ->
                                 backStack.add(Preview(taskTitle))
                             },
+                            imageUri = capture.uri,
                             vm = vm
                         )
                     }
@@ -205,18 +213,24 @@ fun DoneMateApp() {
                             vm = vm
                         )
                     }
-                    entry<Permission>{ taskTitle ->
+                    entry<Permission>{ task ->
                     PermissionScreen(
                             onNavigateToPreview = {
                                 backStack.removeLastOrNull()
-                                backStack.add(Preview(taskTitle.taskTitle))
+                                backStack.add(Preview(task.taskTitle))
                             },
-                            taskTitle = taskTitle.taskTitle
+                            taskTitle = task.taskTitle
                         )
                     }
-                    entry<Preview>{ taskTitle ->
+                    entry<Preview>{ task ->
                         val vm = hiltViewModel<PreviewViewModel>()
-                        PreviewScreen(taskTitle = taskTitle.taskTitle,viewModel = vm)
+                        PreviewScreen(taskTitle = task.taskTitle,
+                            viewModel = vm,
+                            onNavigateToTask = { uri: Uri? ->
+                                backStack.removeLastOrNull()
+                                // MOVES ONLY TO EDIT, SHOULD ALSO FOR ADD
+                                backStack.add(Edit(uri?.toString()))
+                            })
                     }
                 }
             )

@@ -1,6 +1,9 @@
 package com.example.donemate.ui.screens.add
 
 import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -47,13 +50,18 @@ fun AddScreen(
     navigateToTasks: () -> Boolean,
     navigateToPermission: (taskTitle: String) -> Unit,
     onNavigateToPreview: (taskTitle: String) -> Unit,
-    imageUri: String?
+    cameraImageUri: String?
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
     var expanded by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
-
+    var imageUri by remember { mutableStateOf(cameraImageUri) }
+    val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            imageUri = uri.toString()
+        }
+    }
 
     Row(modifier = Modifier.fillMaxSize(),
         verticalAlignment = Alignment.CenterVertically,
@@ -86,7 +94,9 @@ fun AddScreen(
                             onNavigateToPreview(uiState.title)
                         }
                    },
-                    onChoosingGallery = {}
+                    onChoosingGallery = {
+                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }
                 )
             }
 
@@ -142,7 +152,9 @@ fun AddScreen(
             }
 
             Spacer(Modifier.height(8.dp))
-            Button(onClick = { showDialog = true}){
+            Button(onClick = { showDialog = true
+
+            }){
                 Text("Set image")
             }
 

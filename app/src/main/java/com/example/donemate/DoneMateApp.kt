@@ -180,7 +180,7 @@ fun DoneMateApp() {
                             onNavigateToPreview = { taskTitle ->
                                 backStack.add(Preview(taskTitle))
                             },
-                            imageUri = capture.uri,
+                            cameraImageUri = capture.uri,
                             vm = vm
                         )
                     }

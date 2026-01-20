@@ -1,21 +1,13 @@
 package com.example.donemate.ui.screens.preview
 
 import android.net.Uri
-import android.util.Log
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.donemate.data.local.TaskPicturesRepositoryImpl
-import com.example.donemate.data.local.models.TaskPicture
-import com.example.donemate.domain.camera.CameraSystem
-import com.example.donemate.domain.remote.MediaStorage
+import com.example.donemate.domain.data.camera.CameraSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 

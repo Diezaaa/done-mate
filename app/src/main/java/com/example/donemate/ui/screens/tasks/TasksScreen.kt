@@ -1,5 +1,6 @@
 package com.example.donemate.ui.screens.tasks
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,15 +38,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.data.remote.models.Task
 import com.example.donemate.R
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
-import com.example.donemate.data.remote.models.Progress
+import com.example.donemate.domain.data.model.Progress
+import com.example.donemate.domain.data.model.Task
+import kotlinx.coroutines.delay
 
 @Composable
 fun TasksScreen(
@@ -53,6 +57,12 @@ fun TasksScreen(
     navigateToEdit: (id: String, title: String) -> Unit,
     navigateToAdd: () -> Boolean
 ) {
+    LaunchedEffect(Unit) {
+        while (true) {
+            vm.syncIfOnline()
+            delay(2_000)
+        }
+    }
     val tasks by vm.tasks.collectAsStateWithLifecycle(emptyList())
     Box(modifier =  Modifier.fillMaxSize()) {
 
@@ -96,13 +106,24 @@ fun TaskItem(
         ) {
             Row {
                 Column(modifier = Modifier.width(100.dp).height(100.dp).padding(10.dp)){
-                    AsyncImage(
-                        model = task.imageUri,
-                        contentDescription = "image of a task",
-                        placeholder = painterResource(R.drawable.ic_launcher_background),
-                        contentScale = ContentScale.FillWidth,
-                        modifier = Modifier.clip(RoundedCornerShape(2.dp))
-                    )
+                    if(task.imageUri != null) {
+                        AsyncImage(
+                            model = task.imageUri!!.toUri(),
+                            contentDescription = "image of a task",
+                            placeholder = painterResource(R.drawable.ic_launcher_background),
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier.clip(RoundedCornerShape(2.dp))
+                        )
+                    }
+                    else{
+                        Image(
+                            painter = painterResource(R.drawable.ic_launcher_background),
+                            contentDescription = "default task image",
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(2.dp))
+                        )
+                    }
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(task.title, fontSize = 24.sp)

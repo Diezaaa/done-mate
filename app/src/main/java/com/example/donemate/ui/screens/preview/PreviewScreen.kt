@@ -58,7 +58,7 @@ fun PreviewScreen(
     taskTitle: String,
     viewModel: PreviewViewModel,
     modifier: Modifier = Modifier,
-    onNavigateToTask: (uri: Uri?) -> Unit,
+    onNavigateToTask: (uri: Uri) -> Unit,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()

@@ -1,4 +1,4 @@
-package com.example.donemate.domain.remote
+package com.example.donemate.domain.data.remote
 
 import com.example.donemate.data.remote.models.User
 import com.example.donemate.data.remote.AuthResult

@@ -1,29 +1,27 @@
 package com.example.donemate.ui.screens.add
 
-import android.net.Uri
-import android.util.Log
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.data.local.TaskPicturesRepositoryImpl
-import com.example.donemate.data.local.models.TaskPicture
-import com.example.donemate.data.remote.models.Task
-import com.example.donemate.domain.remote.StorageService
+import com.example.donemate.domain.data.model.Task
+import com.example.donemate.domain.data.remote.FirestoreService
+import com.example.donemate.domain.data.repository.OfflineFirstTasksRepository
+import com.example.donemate.ui.common.TaskUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class AddViewModel @Inject constructor(
-    private val storageService: StorageService,
-    private val picturesRepositoryImpl: TaskPicturesRepositoryImpl
+    private val storageService: FirestoreService,
+    private val offlineFirstTasksRepository: OfflineFirstTasksRepository
 ) : ViewModel()  {
-    private val _uiState = MutableStateFlow(Task())
-    val uiState: StateFlow<Task> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(TaskUiState())
+    val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
 
     fun onTitleChange(title: String){
         _uiState.value = _uiState.value.copy(title = title)
@@ -33,15 +31,16 @@ class AddViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(progress = progress)
     }
 
-    fun onSaveTask(uri: String?){
+     fun onSaveTask(uri: String?){
+        val taskUiState = _uiState.value
+        val task = Task(
+            id = UUID.randomUUID().toString(),
+            title = taskUiState.title,
+            progress = taskUiState.progress,
+            imageUri = uri
+        )
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val id = storageService.save(_uiState.value, null)
-                if (uri != null){ picturesRepositoryImpl.insert(TaskPicture(0, id, uri))}
-            } catch (e: Exception) {
-                Log.e("DEBUG", "Failed to save: $e")
-            }
+            offlineFirstTasksRepository.insert(task)
         }
-
     }
 }

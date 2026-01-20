@@ -34,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.data.remote.models.Progress
+import com.example.donemate.domain.data.model.Progress
 import com.example.donemate.ui.components.CameraOrGalleryDialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -148,7 +148,8 @@ fun AddScreen(
 
             Button(
                 onClick = {
-                    vm.onSaveTask(imageUri) },
+                    vm.onSaveTask(imageUri)
+                          navigateToTasks()},
                 modifier = Modifier.width(283.dp)
             ) {
                 Text("Create")

@@ -34,6 +34,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.core.net.toUri
 import com.example.donemate.ui.screens.account.AccountScreen
 import com.example.donemate.ui.screens.account.AccountViewModel
 import com.example.donemate.ui.screens.link_account.LinkAccountScreen
@@ -43,7 +44,6 @@ import com.example.donemate.ui.screens.preview.PreviewScreen
 import com.example.donemate.ui.screens.preview.PreviewViewModel
 import com.example.donemate.ui.screens.reset_password.ResetPasswordScreen
 import com.example.donemate.ui.screens.reset_password.ResetPasswordViewModel
-import com.example.donemate.data.remote.models.Task
 
 @Serializable
 data object SignUp : NavKey
@@ -165,6 +165,7 @@ fun DoneMateApp() {
                                 backStack.add(Preview(task.title))
                             },
                             id = task.id,
+                            uri = task.uri,
                             vm = vm
                         )
                     }
@@ -226,14 +227,28 @@ fun DoneMateApp() {
                         val vm = hiltViewModel<PreviewViewModel>()
                         PreviewScreen(taskTitle = task.taskTitle,
                             viewModel = vm,
-                            onNavigateToTask = { uri: Uri? ->
-                                backStack.removeLastOrNull()
-                                // MOVES ONLY TO EDIT, SHOULD ALSO FOR ADD
-                                backStack.add(Edit(uri?.toString()))
+                            onNavigateToTask = { uri: Uri ->
+                                backStack.popPreviewAndSetUri(uri)
                             })
                     }
                 }
             )
         }
     }
+}
+
+
+private fun MutableList<NavKey>.popPreviewAndSetUri(uri: Uri) {
+    val uriStr = uri.toString()
+
+    val prevIndex = lastIndex - 1
+    val prev = getOrNull(prevIndex)
+
+    if (prevIndex >= 0) {
+        when (prev) {
+            is Add  -> this[prevIndex] = prev.copy(uri = uriStr.toString())
+            is Edit -> this[prevIndex] = prev.copy(uri = uriStr.toString())
+        }
+    }
+    removeLastOrNull()
 }

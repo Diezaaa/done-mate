@@ -4,6 +4,8 @@ import com.example.donemate.BuildConfig
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.firestoreSettings
+import com.google.firebase.firestore.memoryCacheSettings
 import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
@@ -33,7 +35,10 @@ object FirebaseModule {
     @Singleton
     fun firestore(): FirebaseFirestore {
         val firestore = FirebaseFirestore.getInstance()
-
+        val firebaseSettings = firestoreSettings {
+            setLocalCacheSettings(memoryCacheSettings { })
+        }
+        firestore.firestoreSettings = firebaseSettings
         if (BuildConfig.DEBUG) {
             firestore.useEmulator("10.0.2.2", 8080)
             // It's usually helpful to disable persistence when talking to emulator

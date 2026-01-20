@@ -1,7 +1,7 @@
 package com.example.donemate.data.remote
 
 import com.example.donemate.data.remote.models.User
-import com.example.donemate.domain.remote.AccountService
+import com.example.donemate.domain.data.remote.AccountService
 import com.google.firebase.auth.FirebaseAuth
 
 import com.google.firebase.auth.EmailAuthProvider

@@ -3,7 +3,7 @@ package com.example.donemate.ui.screens.link_account
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.donemate.data.remote.models.User
-import com.example.donemate.domain.remote.AccountService
+import com.example.donemate.domain.data.remote.AccountService
 import com.example.donemate.data.remote.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow

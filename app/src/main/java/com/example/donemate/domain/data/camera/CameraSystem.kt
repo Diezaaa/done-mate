@@ -1,4 +1,4 @@
-package com.example.donemate.domain.camera
+package com.example.donemate.domain.data.camera
 
 import android.net.Uri
 import androidx.camera.core.SurfaceRequest

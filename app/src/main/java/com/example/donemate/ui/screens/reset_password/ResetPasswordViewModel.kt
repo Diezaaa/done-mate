@@ -2,7 +2,7 @@ package com.example.donemate.ui.screens.reset_password
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.domain.remote.AccountService
+import com.example.donemate.domain.data.remote.AccountService
 import com.example.donemate.data.remote.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -3,7 +3,7 @@ package com.example.donemate.di
 import android.content.Context
 import androidx.room.Room
 import com.example.donemate.data.local.Database
-import com.example.donemate.data.local.TaskPictureDao
+import com.example.donemate.data.local.TasksDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,7 +28,7 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideTaskPictureDao(database: Database): TaskPictureDao {
+    fun provideTaskPictureDao(database: Database): TasksDao {
         return database.taskPictureDao()
     }
 }

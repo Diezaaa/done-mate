@@ -1,6 +1,4 @@
-package com.example.donemate.data.remote.models
-
-import com.google.firebase.firestore.DocumentId
+package com.example.donemate.domain.data.model
 
 enum class Progress(val value: Int, val label: String) {
     NOT_STARTED(0, "Not Started"),
@@ -9,17 +7,15 @@ enum class Progress(val value: Int, val label: String) {
 
     companion object {
         fun fromInt(value: Int): Progress =
-            Progress.entries.firstOrNull { it.value == value } ?: NOT_STARTED
+            entries.firstOrNull { it.value == value } ?: NOT_STARTED
 
         fun labelFromInt(value: Int): String = fromInt(value).label
     }
 }
 
-// Task data class
-data class Task(
-    @DocumentId val id: String = "",
-    val title: String = "",
+data class Task (
+    val id: String,
+    val title: String,
     val progress: Int = Progress.NOT_STARTED.value,
-    val userId: String = "",
     var imageUri: String? = null
 )

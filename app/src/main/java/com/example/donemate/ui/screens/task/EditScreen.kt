@@ -36,7 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.data.remote.models.Progress
+import com.example.donemate.domain.data.model.Progress
 import com.example.donemate.ui.components.CameraOrGalleryDialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -49,7 +49,9 @@ fun EditScreen(
     vm: EditViewModel,
     navigateToTasks: () -> Boolean,
     navigateToPermission: () -> Unit,
-    onNavigateToPreview: () -> Unit
+    onNavigateToPreview: () -> Unit,
+    uri: String?
+
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
@@ -148,7 +150,7 @@ fun EditScreen(
             Spacer(Modifier.height(8.dp))
 
             Button(
-                onClick = {vm.onSaveTask()
+                onClick = {vm.onSaveTask(uri, id)
                     navigateToTasks()},
                 modifier = Modifier.width(283.dp)
             ) {

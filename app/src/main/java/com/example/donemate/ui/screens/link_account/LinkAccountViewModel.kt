@@ -3,7 +3,7 @@ package com.example.donemate.ui.screens.link_account
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.donemate.data.remote.models.User
-import com.example.donemate.domain.data.remote.AccountService
+import com.example.donemate.domain.remote.AccountRepository
 import com.example.donemate.data.remote.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -17,14 +17,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LinkAccountViewModel @Inject constructor(
-    private val accountService: AccountService
+    private val accountRepository: AccountRepository
 ) : ViewModel()  {
     private val _authState = MutableStateFlow<AuthResult>(AuthResult.NotStarted)
     val authState: StateFlow<AuthResult> = _authState.asStateFlow()
     private val _uiState = MutableStateFlow(LinkAccountUiState())
     val uiState: StateFlow<LinkAccountUiState> = _uiState.asStateFlow()
 
-    val currentUser: Flow<User?> = accountService.currentUser.stateIn(
+    val currentUser: Flow<User?> = accountRepository.currentUser.stateIn(
         viewModelScope,
         SharingStarted.Lazily,
         null
@@ -43,7 +43,7 @@ class LinkAccountViewModel @Inject constructor(
 
 
         viewModelScope.launch {
-            _authState.value = accountService.linkAccount(_uiState.value.email, _uiState.value.password)
+            _authState.value = accountRepository.linkAccount(_uiState.value.email, _uiState.value.password)
         }
 
     }

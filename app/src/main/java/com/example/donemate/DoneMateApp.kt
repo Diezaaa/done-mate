@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -34,7 +35,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.core.net.toUri
+import com.example.donemate.ui.screens.Inspiration.InspirationScreen
+import com.example.donemate.ui.screens.Inspiration.InspirationViewModel
 import com.example.donemate.ui.screens.account.AccountScreen
 import com.example.donemate.ui.screens.account.AccountViewModel
 import com.example.donemate.ui.screens.link_account.LinkAccountScreen
@@ -78,7 +80,11 @@ data class Permission(val taskTitle: String) : NavKey
 @Serializable
 data class Preview(val taskTitle: String) : NavKey
 
-private val TOP_LEVEL_ROUTES : List<TopLevelRoute> = listOf(Tasks, Account)
+@Serializable
+data object Inspiration : TopLevelRoute { override val icon = Icons.Default.Lightbulb }
+
+
+private val TOP_LEVEL_ROUTES : List<TopLevelRoute> = listOf(Tasks, Inspiration, Account)
 
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -230,6 +236,10 @@ fun DoneMateApp() {
                             onNavigateToTask = { uri: Uri ->
                                 backStack.popPreviewAndSetUri(uri)
                             })
+                    }
+                    entry<Inspiration>{
+                        val vm = hiltViewModel<InspirationViewModel>()
+                        InspirationScreen(vm = vm)
                     }
                 }
             )

@@ -1,9 +1,18 @@
 package com.example.donemate.data.camera
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CaptureRequest
 import android.net.Uri
+import android.util.Log
 import android.util.Rational
 import android.view.Surface
+import androidx.annotation.OptIn
+import androidx.camera.camera2.interop.Camera2CameraControl
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import androidx.camera.camera2.interop.CaptureRequestOptions
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
@@ -25,7 +34,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.lifecycleScope
-import com.example.donemate.domain.data.camera.CameraSystem
+import com.example.donemate.domain.camera.CameraSystem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -102,6 +111,8 @@ class CameraXCameraSystem @Inject constructor(
         .addUseCase(imageCaptureUseCase)
         .build()
 
+    @SuppressLint("RestrictedApi")
+    @OptIn(ExperimentalCamera2Interop::class)
     override suspend fun startCamera(
         lifecycleOwner: LifecycleOwner
     ) {
@@ -109,22 +120,23 @@ class CameraXCameraSystem @Inject constructor(
         val camera = processCameraProvider.bindToLifecycle(
             lifecycleOwner, DEFAULT_BACK_CAMERA, useCaseGroup
         )
+
         cameraControl = camera.cameraControl
         cameraInfo = camera.cameraInfo
 
         cameraInfo?.let { info ->
-        // torchState: LiveData<Int> -> Flow<Int>
-        val torchFlow = info.torchState.asFlow().map { it == TorchState.ON }
+            // torchState: LiveData<Int> -> Flow<Int>
+            val torchFlow = info.torchState.asFlow().map { it == TorchState.ON }
 
-        // zoomState: LiveData<ZoomState> -> Flow<Float> of zoomRatio
-        val zoomFlow = info.zoomState.asFlow().map { it.zoomRatio }
+            // zoomState: LiveData<ZoomState> -> Flow<Float> of zoomRatio
+            val zoomFlow = info.zoomState.asFlow().map { it.zoomRatio }
 
-        // combine the two flows and push to _cameraState
-        combine(torchFlow, zoomFlow) { torchOn, zoomRatio ->
-            CameraState(torchOn = torchOn, zoomRatio = zoomRatio)
-        }.onEach { newState ->
-            _cameraState.value = newState
-        }.launchIn(lifecycleOwner.lifecycleScope)
+            // combine the two flows and push to _cameraState
+            combine(torchFlow, zoomFlow) { torchOn, zoomRatio ->
+                CameraState(torchOn = torchOn, zoomRatio = zoomRatio)
+            }.onEach { newState ->
+                _cameraState.value = newState
+            }.launchIn(lifecycleOwner.lifecycleScope)
         }
     }
     // UNDERSTAND THIS CODE
@@ -155,4 +167,5 @@ class CameraXCameraSystem @Inject constructor(
         )
 
     }
+
 }

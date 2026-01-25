@@ -2,9 +2,9 @@ package com.example.donemate.ui.screens.add
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.domain.data.model.Task
-import com.example.donemate.domain.data.remote.FirestoreService
-import com.example.donemate.domain.data.repository.OfflineFirstTasksRepository
+import com.example.donemate.domain.model.Task
+import com.example.donemate.domain.remote.FirestoreRepository
+import com.example.donemate.domain.repository.OfflineFirstTasksRepository
 import com.example.donemate.ui.common.TaskUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddViewModel @Inject constructor(
-    private val storageService: FirestoreService,
+    private val storageService: FirestoreRepository,
     private val offlineFirstTasksRepository: OfflineFirstTasksRepository
 ) : ViewModel()  {
     private val _uiState = MutableStateFlow(TaskUiState())

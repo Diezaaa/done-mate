@@ -5,7 +5,7 @@ import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.domain.data.remote.AccountService
+import com.example.donemate.domain.remote.AccountRepository
 import com.example.donemate.data.remote.AuthResult
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -21,14 +21,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val accountService: AccountService
+    private val accountRepository: AccountRepository
 ) : ViewModel()  {
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
     private val _authState = MutableStateFlow<AuthResult>(AuthResult.NotStarted)
     val authState: StateFlow<AuthResult> = _authState.asStateFlow()
 
-    val hasUser: Flow<Boolean> = accountService.hasUser.stateIn(
+    val hasUser: Flow<Boolean> = accountRepository.hasUser.stateIn(
         viewModelScope,
         SharingStarted.Lazily,
         false
@@ -39,7 +39,7 @@ class SignUpViewModel @Inject constructor(
         viewModelScope.launch {
             if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                accountService.signInWithGoogle(googleIdTokenCredential.idToken)
+                accountRepository.signInWithGoogle(googleIdTokenCredential.idToken)
             } else {
                 Log.e("ERROR_TAG", "Er")
             }
@@ -54,13 +54,13 @@ class SignUpViewModel @Inject constructor(
     }
     fun onSignUpClick() {
         viewModelScope.launch {
-            _authState.value = accountService.createAccount(_uiState.value.email, _uiState.value.password)
+            _authState.value = accountRepository.createAccount(_uiState.value.email, _uiState.value.password)
         }
     }
 
     fun onContinueAnonymously() {
         viewModelScope.launch {
-            accountService.createAnonymousAccount()
+            accountRepository.createAnonymousAccount()
         }
     }
 }

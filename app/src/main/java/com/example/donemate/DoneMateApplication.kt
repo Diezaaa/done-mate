@@ -11,14 +11,4 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
-class DoneMateApplication : Application(), Configuration.Provider {
-
-    // Setup code for working with Hilt + WorkManager
-    @Inject
-    lateinit var workerFactory: HiltWorkerFactory
-
-    override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
-}
+class DoneMateApplication : Application()

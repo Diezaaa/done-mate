@@ -47,8 +47,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
-import com.example.donemate.domain.data.model.Progress
-import com.example.donemate.domain.data.model.Task
+import com.example.donemate.data.remote.model.NetworkQuotesList
+import com.example.donemate.domain.model.Progress
+import com.example.donemate.domain.model.Task
 import kotlinx.coroutines.delay
 
 @Composable

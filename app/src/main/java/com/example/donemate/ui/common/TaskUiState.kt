@@ -1,6 +1,6 @@
 package com.example.donemate.ui.common
 
-import com.example.donemate.domain.data.model.Progress
+import com.example.donemate.domain.model.Progress
 
 data class TaskUiState(
     val title: String = "",

@@ -2,11 +2,11 @@ package com.example.donemate.data.local
 
 import android.app.Application
 import android.content.ContentResolver
-import com.example.donemate.domain.data.local.ImageStorage
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import java.io.File
 import androidx.core.net.toUri
+import com.example.donemate.domain.local.ImageStorage
 
 @Singleton
 class AndroidImageStorage @Inject constructor(

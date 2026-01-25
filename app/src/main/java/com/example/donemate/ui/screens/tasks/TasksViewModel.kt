@@ -2,14 +2,13 @@ package com.example.donemate.ui.screens.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.domain.core.NetworkMonitor
-import com.example.donemate.domain.data.model.Task
-import com.example.donemate.domain.data.remote.FirestoreService
-import com.example.donemate.domain.data.repository.OfflineFirstTasksRepository
+import com.example.donemate.data.remote.model.NetworkQuotesList
+import com.example.donemate.domain.local.QuotesRepository
+import com.example.donemate.domain.model.Task
+import com.example.donemate.domain.repository.OfflineFirstTasksRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -20,7 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TasksViewModel @Inject constructor(
-    private val offlineFirstTasksRepository: OfflineFirstTasksRepository
+    private val offlineFirstTasksRepository: OfflineFirstTasksRepository,
+    private val quotesRepository: QuotesRepository
 ) : ViewModel()  {
     val tasks: StateFlow<List<Task>> =
         offlineFirstTasksRepository.getTasks()

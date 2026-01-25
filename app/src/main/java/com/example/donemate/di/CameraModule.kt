@@ -1,7 +1,7 @@
 package com.example.donemate.di
 
 import android.app.Application
-import com.example.donemate.domain.data.camera.CameraSystem
+import com.example.donemate.domain.camera.CameraSystem
 import com.example.donemate.data.camera.CameraXCameraSystem
 import dagger.Module
 import dagger.Provides

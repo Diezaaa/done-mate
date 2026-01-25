@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "414589668560-7il2se4m2tfaqu9bugoe6i9qtugmero6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.donemate",
+            "certificate_hash": "cba1521e278df4b49edbc20646ebeccd524aca75"
+          }
+        },
+        {
           "client_id": "414589668560-a8ed10ft54jfctf7con0aba6ctki553d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

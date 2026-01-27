@@ -18,6 +18,10 @@ val motivationalOr = listOf(
 interface QuoteApi {
     @GET("quotes")
     suspend fun getQuotes(
-        @Query("page") page: Int,
-        @Query("tags") tags: String = motivationalOr): NetworkQuotesList
+        @Query("page") page: Int = 1,
+        @Query("tags") tags: String = motivationalOr,
+        @Query("limit") limit: Int = 20,
+        @Query("sortBy") sortBy: String = "dateAdded",
+        @Query("order") order: String = "asc"
+    ): NetworkQuotesList
 }

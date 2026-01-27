@@ -35,8 +35,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.donemate.ui.screens.Inspiration.InspirationScreen
-import com.example.donemate.ui.screens.Inspiration.InspirationViewModel
+import com.example.donemate.ui.screens.inspiration.InspirationScreen
+import com.example.donemate.ui.screens.inspiration.InspirationViewModel
 import com.example.donemate.ui.screens.account.AccountScreen
 import com.example.donemate.ui.screens.account.AccountViewModel
 import com.example.donemate.ui.screens.link_account.LinkAccountScreen

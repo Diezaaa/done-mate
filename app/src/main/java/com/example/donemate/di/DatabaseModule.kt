@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.donemate.data.local.db.Database
 import com.example.donemate.data.local.TasksDao
+import com.example.donemate.data.local.db.Converters
 import com.example.donemate.data.local.db.QuotesDao
 import com.example.donemate.data.local.db.RemoteKeyDao
 import dagger.Module

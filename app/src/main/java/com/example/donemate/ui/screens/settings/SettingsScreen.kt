@@ -1,7 +1,8 @@
-package com.example.donemate.ui.screens.account
+package com.example.donemate.ui.screens.settings
 
-import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +14,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,19 +24,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
 
 @Composable
-fun AccountScreen(
+fun SettingsScreen(
     navigateToSignIn: () -> Unit,
-    vm: AccountViewModel,
-    navigateToLinkAccount: () -> Boolean
+    vm: SettingsViewModel,
+    navigateToLinkAccount: () -> Boolean,
+    onToggleTheme: () -> Unit
 ) {
     val email by vm.currentEmail.collectAsStateWithLifecycle()
     val currentUser by vm.currentUser.collectAsStateWithLifecycle()
     val hasUser by vm.hasUser.collectAsStateWithLifecycle()
+    val isDarkTheme by vm.isDarkTheme.collectAsStateWithLifecycle()
 
     LaunchedEffect(hasUser) {
         if (!hasUser){
@@ -42,12 +48,18 @@ fun AccountScreen(
     }
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
+        Text("Account", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(5.dp))
         currentUser?.isAnonymous?.let {
+            currentUser?.isAnonymous?.let {
+                if (it) {
+                    Text("You are currently in anonymous account.")
+                }
+            }
             if(!it) {
-                Text("Your e-mail: $email")
+                Text("Email: $email")
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Button(
@@ -58,7 +70,7 @@ fun AccountScreen(
                         containerColor = Color.Red,
                         contentColor = Color.White
                     ),
-                    modifier = Modifier.width(200.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
@@ -71,11 +83,6 @@ fun AccountScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
         }
-        currentUser?.isAnonymous?.let {
-            if (it) {
-                Text("You are currently in anonymous account.")
-            }
-        }
         Button(
             onClick = {
                 vm.onLogOut()
@@ -85,7 +92,7 @@ fun AccountScreen(
                 containerColor = Color.Red,
                 contentColor = Color.White
             ),
-            modifier = Modifier.width(200.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ExitToApp,
@@ -100,7 +107,8 @@ fun AccountScreen(
                     onClick = {
                         navigateToLinkAccount()
                     },
-                    modifier = Modifier.width(200.dp))
+                    modifier = Modifier.fillMaxWidth()
+                )
                 {
                     Icon(
                         imageVector = Icons.Default.Link,
@@ -111,6 +119,22 @@ fun AccountScreen(
 
                 }
             }
+        }
+        Spacer(modifier = Modifier.height(15.dp))
+        HorizontalDivider(thickness = 2.dp)
+        Spacer(modifier = Modifier.height(15.dp))
+        Text("Interface", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Row(modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically){
+            Text("Dark theme")
+
+            Switch(
+                checked = isDarkTheme,
+                onCheckedChange = {
+                    vm.onChangeTheme()
+                }
+            )
         }
     }
 }

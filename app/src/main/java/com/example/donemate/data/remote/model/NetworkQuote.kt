@@ -19,5 +19,5 @@ data class NetworkQuote (
 fun NetworkQuote.asEntity() = QuoteEntity(
     id = id,
     content = content,
-    author = author
+    author = author,
 )

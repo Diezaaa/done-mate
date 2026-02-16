@@ -2,13 +2,11 @@ package com.example.donemate.ui.screens.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.data.remote.model.NetworkQuotesList
-import com.example.donemate.domain.local.QuotesRepository
+import com.example.donemate.domain.remote.QuotesRepository
 import com.example.donemate.domain.model.Task
-import com.example.donemate.domain.repository.OfflineFirstTasksRepository
+import com.example.donemate.domain.sync.OfflineFirstTasksRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

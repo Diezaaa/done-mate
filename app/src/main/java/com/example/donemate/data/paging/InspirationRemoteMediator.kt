@@ -1,15 +1,16 @@
 package com.example.donemate.data.paging
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import com.example.donemate.data.local.db.QuotesDao
-import com.example.donemate.data.local.db.RemoteKey
+import com.example.donemate.data.local.model.RemoteKey
 import com.example.donemate.data.local.db.RemoteKeyDao
 import com.example.donemate.data.local.model.QuoteEntity
 import com.example.donemate.data.remote.model.asEntity
-import com.example.donemate.domain.local.QuotesRepository
+import com.example.donemate.domain.remote.QuotesRepository
 
 @OptIn(ExperimentalPagingApi::class)
 class InspirationRemoteMediator(
@@ -62,7 +63,7 @@ class InspirationRemoteMediator(
                 RemoteKey(id=1,response.page, nextKey)
             )
 
-            val quotes =                 response.results.map { networkQuote ->
+            val quotes = response.results.map { networkQuote ->
                 networkQuote.asEntity()
             }
 
@@ -70,6 +71,7 @@ class InspirationRemoteMediator(
                 quotes
             )
 
+            Log.d("paging", "20 loaded")
             MediatorResult.Success(
                 endOfPaginationReached = nextKey == null
             )

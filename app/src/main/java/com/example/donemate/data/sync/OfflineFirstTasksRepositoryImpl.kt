@@ -1,7 +1,7 @@
-package com.example.donemate.data.shared
+package com.example.donemate.data.sync
 
 import com.example.donemate.data.local.TasksDao
-import com.example.donemate.data.local.models.TaskEntity
+import com.example.donemate.data.local.models.asEntity
 import com.example.donemate.data.local.models.asExternalModel
 import com.example.donemate.domain.model.Task
 import com.example.donemate.data.remote.models.NetworkTask
@@ -10,7 +10,7 @@ import com.example.donemate.domain.local.ImageStorage
 import com.example.donemate.domain.remote.AccountRepository
 import com.example.donemate.domain.remote.FirestoreRepository
 import com.example.donemate.domain.remote.StorageRepository
-import com.example.donemate.domain.repository.OfflineFirstTasksRepository
+import com.example.donemate.domain.sync.OfflineFirstTasksRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -23,41 +23,23 @@ class OfflineFirstTasksRepositoryImpl @Inject constructor(private val storageRep
                                                           private val imageStorage: ImageStorage
 ): OfflineFirstTasksRepository {
      override suspend fun insert(task: Task){
-         val taskEntity = TaskEntity(
-             id = task.id,
-             title = task.title,
-             progress = task.progress,
-             userId = accountRepository.currentUserId,
-             imageUri = task.imageUri,
-             updatedAt = System.currentTimeMillis(),
-             needsSync = true,
-         )
-         tasksDao.insert(taskEntity)
-
+         tasksDao.insert(task.asEntity(accountRepository.currentUserId))
     }
 
 
     override suspend fun delete(id: String){
-         val task = tasksDao.getTask(id)
+        val task = tasksDao.getTask(id)
         task?.let { tasksDao.markAsDeleted(it.id) }
     }
 
 
     override suspend fun update(newTask: Task) {
         val oldTaskUri = tasksDao.getTask(newTask.id)?.imageUri
-        val newTaskEntity: TaskEntity = TaskEntity(
-            id = newTask.id,
-            title = newTask.title,
-            progress = newTask.progress,
-            userId = accountRepository.currentUserId,
-            imageUri = newTask.imageUri,
-            updatedAt = System.currentTimeMillis(),
-            needsSync = true,
-        )
-        if (oldTaskUri != newTaskEntity.imageUri && oldTaskUri != null) {
+        val taskEntity = newTask.asEntity(accountRepository.currentUserId)
+        if (oldTaskUri != taskEntity.imageUri && oldTaskUri != null) {
             deleteIfPrivateFile(oldTaskUri)
         }
-        tasksDao.update(newTaskEntity)
+        tasksDao.update(taskEntity)
     }
 
     override fun deleteIfPrivateFile(uri: String) {

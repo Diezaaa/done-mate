@@ -1,4 +1,4 @@
-package com.example.donemate.domain.repository
+package com.example.donemate.domain.sync
 
 import com.example.donemate.domain.model.Task
 import kotlinx.coroutines.flow.Flow

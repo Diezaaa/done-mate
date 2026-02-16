@@ -3,9 +3,9 @@ package com.example.donemate
 import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -34,11 +34,16 @@ import kotlinx.serialization.Serializable
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.donemate.ui.screens.settings.SettingsScreen
+import com.example.donemate.ui.screens.settings.SettingsViewModel
 import com.example.donemate.ui.screens.inspiration.InspirationScreen
 import com.example.donemate.ui.screens.inspiration.InspirationViewModel
-import com.example.donemate.ui.screens.account.AccountScreen
-import com.example.donemate.ui.screens.account.AccountViewModel
 import com.example.donemate.ui.screens.link_account.LinkAccountScreen
 import com.example.donemate.ui.screens.link_account.LinkAccountViewModel
 import com.example.donemate.ui.screens.permission.PermissionScreen
@@ -69,7 +74,7 @@ private sealed interface TopLevelRoute : NavKey {
     val icon: ImageVector
 }
 @Serializable
-data object Account : TopLevelRoute { override val icon = Icons.Default.AccountCircle }
+data object Settings : TopLevelRoute { override val icon = Icons.Default.Settings }
 
 @Serializable
 data object ResetPassword : NavKey
@@ -84,13 +89,18 @@ data class Preview(val taskTitle: String) : NavKey
 data object Inspiration : TopLevelRoute { override val icon = Icons.Default.Lightbulb }
 
 
-private val TOP_LEVEL_ROUTES : List<TopLevelRoute> = listOf(Tasks, Inspiration, Account)
+private val TOP_LEVEL_ROUTES : List<TopLevelRoute> = listOf(Tasks, Inspiration, Settings)
 
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun DoneMateApp() {
-    DoneMateTheme {
+    val viewModel = hiltViewModel<AppThemeViewModel>()
+    val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = false)
+
+    DoneMateTheme(darkTheme = isDarkTheme) {
+        var darkTheme by remember { mutableStateOf(true) }
+
         val backStack = rememberNavBackStack(SignIn)
         val viewModelDecorator = rememberViewModelStoreNavEntryDecorator<NavKey>()
         val saveableStateDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
@@ -171,7 +181,7 @@ fun DoneMateApp() {
                                 backStack.add(Preview(task.title))
                             },
                             id = task.id,
-                            uri = task.uri,
+                            cameraImageUri = task.uri,
                             vm = vm
                         )
                     }
@@ -190,14 +200,15 @@ fun DoneMateApp() {
                             vm = vm
                         )
                     }
-                    entry<Account> {
-                        val vm = hiltViewModel<AccountViewModel>()
-                        AccountScreen(
+                    entry<Settings> {
+                        val vm = hiltViewModel<SettingsViewModel>()
+                        SettingsScreen(
                             navigateToSignIn = {backStack.clear()
                                 backStack.add(SignIn)},
                             navigateToLinkAccount = {
                                 backStack.add(LinkAccount)
                             },
+                            onToggleTheme = { darkTheme = !darkTheme },
                             vm = vm,
                         )
                     }

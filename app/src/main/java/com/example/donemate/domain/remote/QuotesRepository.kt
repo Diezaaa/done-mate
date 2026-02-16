@@ -1,4 +1,4 @@
-package com.example.donemate.domain.local
+package com.example.donemate.domain.remote
 
 import com.example.donemate.data.remote.model.NetworkQuotesList
 

@@ -3,9 +3,7 @@ package com.example.donemate.ui.screens.add
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.donemate.domain.model.Task
-import com.example.donemate.domain.remote.FirestoreRepository
-import com.example.donemate.domain.repository.OfflineFirstTasksRepository
-import com.example.donemate.ui.common.TaskUiState
+import com.example.donemate.domain.sync.OfflineFirstTasksRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,11 +15,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddViewModel @Inject constructor(
-    private val storageService: FirestoreRepository,
     private val offlineFirstTasksRepository: OfflineFirstTasksRepository
 ) : ViewModel()  {
-    private val _uiState = MutableStateFlow(TaskUiState())
-    val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(Task())
+    val uiState: StateFlow<Task> = _uiState.asStateFlow()
 
     fun onTitleChange(title: String){
         _uiState.value = _uiState.value.copy(title = title)

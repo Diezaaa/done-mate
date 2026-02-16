@@ -1,9 +1,6 @@
 package com.example.donemate.di
 
 import com.example.donemate.data.remote.QuoteApi
-import com.example.donemate.data.shared.OfflineFirstTasksRepositoryImpl
-import com.example.donemate.domain.repository.OfflineFirstTasksRepository
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

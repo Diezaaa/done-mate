@@ -4,8 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.donemate.domain.model.Task
 import com.example.donemate.domain.remote.FirestoreRepository
-import com.example.donemate.domain.repository.OfflineFirstTasksRepository
-import com.example.donemate.ui.common.TaskUiState
+import com.example.donemate.domain.sync.OfflineFirstTasksRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,8 +20,10 @@ class EditViewModel @Inject constructor(
     private val offlineFirstTasksRepository: OfflineFirstTasksRepository,
     private val storageService: FirestoreRepository
 ) : ViewModel()  {
-    private val _uiState = MutableStateFlow(TaskUiState())
-    val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(Task(
+        id = ""
+    ))
+    val uiState: StateFlow<Task> = _uiState.asStateFlow()
     var hasLoaded = false
 
     fun loadTask(id: String) {
@@ -33,7 +35,9 @@ class EditViewModel @Inject constructor(
                 }
 
                 _uiState.value = _uiState.value.copy(
+                    id = id,
                     progress = task!!.progress,
+                    dateTime = task.dateTime,
                     title = task.title,
                     imageUri = task.imageUri,
                 )
@@ -54,14 +58,13 @@ class EditViewModel @Inject constructor(
         if (uri != null){
             _uiState.value = _uiState.value.copy(imageUri = uri)
         }
-        val task = Task(
-            id = id,
-            title = taskUiState.title,
-            progress = taskUiState.progress,
-            imageUri = uri
-        )
         viewModelScope.launch(Dispatchers.IO) {
-            offlineFirstTasksRepository.update(task)
+            offlineFirstTasksRepository.update(taskUiState)
         }
+    }
+
+    fun onDateTimeChange(millis: Long?){
+        millis ?: return
+        _uiState.value = _uiState.value.copy(dateTime = Instant.ofEpochMilli(millis))
     }
 }

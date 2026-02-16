@@ -1,5 +1,7 @@
 package com.example.donemate.domain.model
 
+import java.time.Instant
+
 enum class Progress(val value: Int, val label: String) {
     NOT_STARTED(0, "Not Started"),
     IN_PROGRESS(1, "In Progress"),
@@ -14,8 +16,9 @@ enum class Progress(val value: Int, val label: String) {
 }
 
 data class Task (
-    val id: String,
-    val title: String,
+    val id: String = "",
+    val title: String = "",
+    val dateTime: Instant? = null,
     val progress: Int = Progress.NOT_STARTED.value,
     var imageUri: String? = null
 )

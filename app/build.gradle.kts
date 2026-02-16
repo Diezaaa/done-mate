@@ -49,11 +49,12 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
         freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
     buildFeatures {
@@ -136,7 +137,7 @@ dependencies {
 
     // Paging
     val paging_version = "3.3.6"
-
+    testImplementation("androidx.paging:paging-testing:$paging_version")
     implementation("androidx.paging:paging-runtime:$paging_version")
     // optional - Jetpack Compose integration
     implementation("androidx.paging:paging-compose:3.4.0-rc01")
@@ -144,5 +145,17 @@ dependencies {
     // Retorfit
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.2.0")
+
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("androidx.test:core:1.7.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test:rules:1.7.0")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.10.1")
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
 }

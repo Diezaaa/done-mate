@@ -7,116 +7,121 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.donemate.data.remote.AuthResult
-import androidx.compose.material3.SnackbarHost
-import com.example.donemate.ui.components.AuthenticationButton
-import com.example.donemate.ui.components.launchCredManBottomSheet
-
+import com.example.donemate.ui.component.AuthForm
+import com.example.donemate.ui.component.ContinueWithGoogleButton
+import com.example.donemate.ui.component.launchContinueWithGoogleBottomSheet
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun SignUpScreen(navigateToSignIn: () -> Unit, vm: SignUpViewModel, navigateToTasks: () -> Boolean){
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
-    val isLogged by vm.hasUser.collectAsStateWithLifecycle(false)
-    val authState by vm.authState.collectAsStateWithLifecycle()
-    val snackBarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+fun SignUpScreen(
+    vm: SignUpViewModel,
+    navigateToSignIn: () -> Unit,
+    navigateToTasks: () -> Unit,
+    onShowSnackbar: suspend (String) -> SnackbarResult,
+) {
 
-    LaunchedEffect(authState) {
-        when (authState) {
-            is AuthResult.NotStarted -> {}
-            is AuthResult.Success -> {}
-            is AuthResult.Error -> snackBarHostState.showSnackbar((authState as AuthResult.Error).message, duration = SnackbarDuration.Indefinite)
+    val context = LocalContext.current
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        delay(2.seconds)
+        launchContinueWithGoogleBottomSheet(context) { result ->
+            vm.continueWithGoogle(result)
         }
     }
 
+    LaunchedEffect(uiState.errorMessage) {
+        if (uiState.errorMessage != null) {
+            onShowSnackbar("Something went wrong")
+            vm.errorMessageShown()
+        }
+    }
 
-    LaunchedEffect(isLogged) {
-        if(isLogged) {
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
             navigateToTasks()
         }
     }
 
-    LaunchedEffect(Unit) {
-        launchCredManBottomSheet(context) { result ->
-            vm.onSignUpWithGoogle(result)
-        }
-    }
 
-    Scaffold(
-        snackbarHost = {
-            Box(Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter) {
-                SnackbarHost(hostState = snackBarHostState)
-            }
-        }) { paddingValues ->
-        Row(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Column(
+            modifier = Modifier
+                .width(300.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.width(300.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Text(
+                "Sign Up",
+                fontSize = 35.sp
+            )
+            AuthForm(
+                email = uiState.email,
+                password = uiState.password,
+                onEmailChange = vm::updateEmail,
+                onPasswordChange = vm::updatePassword,
+            )
+            Button(
+                onClick = {
+                    vm.createUserWithEmailAndPassword()
+                },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    "Sign Up",
-                    fontSize = 35.sp
-                )
-                Spacer(Modifier.height(15.dp))
-
-                TextField(
-                    value = uiState.email,
-                    onValueChange = vm::onEmailChange,
-                    label = { Text("E-mail") }
-                )
-                Spacer(Modifier.height(8.dp))
-
-                TextField(
-                    value = uiState.password,
-                    onValueChange = vm::onPasswordChange,
-                    label = { Text("Password") }
-                )
-                Spacer(Modifier.height(8.dp))
-
-                Button(
-                    onClick = { vm.onSignUpClick() },
-                    modifier = Modifier.width(283.dp)
-                ) {
-                    Text("Sign up")
-                }
-
-                Spacer(Modifier.height(8.dp))
-                Text("OR")
-                Spacer(Modifier.height(8.dp))
-                AuthenticationButton("Sign in with Google") { credential ->
-                    vm.onSignUpWithGoogle(credential)
-                }
-                Text(text = "Continue without account", modifier = Modifier.clickable {
-                    vm.onContinueAnonymously()
-                })
-                Spacer(Modifier.height(8.dp))
-                Text(text = "Go to sign in", modifier = Modifier.clickable {
+                Text("Sign up")
+            }
+            Text(
+                text = "Already have an account?",
+                modifier = Modifier.clickable {
                     navigateToSignIn()
                 })
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = "or",
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            ContinueWithGoogleButton("Continue with Google") {
+                vm.continueWithGoogle(it)
             }
         }
     }

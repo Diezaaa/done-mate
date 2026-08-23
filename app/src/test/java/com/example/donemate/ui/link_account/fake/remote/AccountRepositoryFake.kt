@@ -1,12 +1,11 @@
 package com.example.donemate.ui.link_account.fake.remote
 
-import com.example.donemate.data.remote.AuthResult
-import com.example.donemate.data.remote.models.User
-import com.example.donemate.domain.remote.AccountRepository
+import com.example.donemate.data.repository.remote.AuthResult
+import com.example.donemate.data.model.User
+import com.example.donemate.data.repository.remote.AccountRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 
 class AccountRepositoryFake() : AccountRepository {
 
@@ -15,21 +14,21 @@ class AccountRepositoryFake() : AccountRepository {
     // ---- Properties used by ViewModels ----
     override val currentUser: Flow<User?> = _currentUser
 
-    override val hasUser: Flow<Boolean> = _currentUser.map { it != null }
+    override val isLoggedIn: Flow<Boolean> = _currentUser.map { it != null }
 
     override val currentUserId: String
         get() = "323"
 
 
-    override suspend fun linkAccount(email: String, password: String): AuthResult {
+    override suspend fun linkEmail(email: String, password: String): AuthResult {
         return AuthResult.Success
     }
 
-    override suspend fun authenticate(email: String, password: String): AuthResult {
+    override suspend fun signInWithEmailAndPassword(email: String, password: String): AuthResult {
         error("Not needed for these tests")
     }
 
-    override suspend fun createAnonymousAccount() {
+    override suspend fun signInAnonymously(): AuthResult {
         error("Not needed for these tests")
     }
 
@@ -41,15 +40,15 @@ class AccountRepositoryFake() : AccountRepository {
         _currentUser.value = null
     }
 
-    override suspend fun resetPassword(email: String): AuthResult {
+    override suspend fun sendPasswordResetEmail(email: String): AuthResult {
         error("Not needed for these tests")
     }
 
-    override suspend fun createAccount(email: String, password: String): AuthResult {
+    override suspend fun createUserWithEmailAndPassword(email: String, password: String): AuthResult {
         error("Not needed for these tests")
     }
 
-    override suspend fun signInWithGoogle(idToken: String) {
+    override suspend fun continueWithGoogle(idToken: String): AuthResult {
         error("Not needed for these tests")
     }
 }

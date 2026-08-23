@@ -1,10 +1,10 @@
 package com.example.donemate.ui.screens.reset_password
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
@@ -20,15 +20,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun ResetPasswordScreen(
-    vm: ResetPasswordViewModel,
-    navigateToSignIn: () -> Boolean
+    vm: ResetPasswordViewModel
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
-    Row(
-        modifier = Modifier.fillMaxSize(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         Column(
             modifier = Modifier.width(300.dp),
@@ -42,18 +41,20 @@ fun ResetPasswordScreen(
 
             TextField(
                 value = uiState.email,
-                onValueChange = vm::onEmailChange,
-                label = { Text("E-mail") }
+                onValueChange = vm::updateEmail,
+                label = { Text("E-mail") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(8.dp))
 
             Button(
-                onClick = { vm.onForgotPassword() },
-                modifier = Modifier.width(283.dp)
+                onClick = { vm.sendPasswordResetEmail() },
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Send code")
             }
-            if (uiState.isSuccess){
+            if (uiState.isSent) {
                 Text("Reset password e-mail was sent. Don't forget to check the spam folder too.")
             }
         }

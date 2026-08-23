@@ -1,0 +1,479 @@
+@startuml
+interface com.example.donemate.domain.remote.QuotesRepository {
++ NetworkQuotesList getQuotes(Int)
+}
+
+interface com.example.donemate.domain.remote.StorageRepository {
++ String uploadPicture(String,ByteArray)
++ ByteArray downloadPicture(String)
++ void deletePicture(String)
+}
+
+class com.example.donemate.ui.screens.reset_password.ResetPasswordViewModel {
++ <<Create>> ResetPasswordViewModel(,AccountRepository)
+}
+
+class com.example.donemate.ui.screens.reset_password.ResetPasswordUiState {
++ <<Create>> ResetPasswordUiState(,String,,Boolean)
+}
+
+class com.example.donemate.ui.screens.task.EditViewModel {
++ <<Create>> EditViewModel(,OfflineFirstTasksRepository,,ImageStorage,,ReminderHelper)
+}
+
+class com.example.donemate.MainActivity {
++ void onCreate(Bundle?)
+}
+
+interface com.example.donemate.domain.local.ThemeRepository {
++ Flow<Boolean> isDarkTheme
++ void changeTheme(Boolean)
+}
+
+
+class com.example.donemate.data.local.model.QuoteEntity {
++ <<Create>> QuoteEntity(,,String,,String,,String)
+}
+
+class com.example.donemate.data.remote.FirestoreRepositoryImpl {
+}
+class com.example.donemate.data.remote.models.NetworkTask {
++ <<Create>> NetworkTask(,,String,,String,,Int,,String,,String?,,Long,,Long?,)
+}
+
+class com.example.donemate.ui.screens.tasks.TasksViewModel {
++ <<Create>> TasksViewModel(,OfflineFirstTasksRepository,,QuotesRepository,,NotificationHelper,,ReminderHelper)
+}
+
+class com.example.donemate.data.remote.AuthResult$NotStarted {
+}
+class com.example.donemate.data.remote.AuthResult$Success {
+}
+class com.example.donemate.data.remote.AuthResult$Error {
++ <<Create>> Error(String)
+}
+
+class com.example.donemate.data.remote.AuthResult {
+}
+class com.example.donemate.data.remote.AccountRepositoryImpl {
++ String currentUserId
++ Flow<Boolean> hasUser
++ Flow<User?> currentUser
++ <<Create>> AccountRepositoryImpl(FirebaseAuth)
++ void null()
++ void null()
++ AuthResult authenticate(String,String)
++ AuthResult createAnonymousAccount()
++ AuthResult linkAccount(String,String)
++ AuthResult deleteAccount()
++ void signOut()
++ AuthResult resetPassword(String)
++ AuthResult createAccount(String,String)
++ AuthResult signInWithGoogle(String)
+}
+
+
+class com.example.donemate.SignUp {
+}
+class com.example.donemate.SignIn {
+}
+class com.example.donemate.Tasks {
++  icon
+}
+
+class com.example.donemate.Edit {
++ <<Create>> Edit(String,String,String?,Progress)
+}
+
+class com.example.donemate.Add {
++ <<Create>> Add(String?)
+}
+
+class com.example.donemate.LinkAccount {
+}
+interface com.example.donemate.TopLevelRoute {
++ ImageVector icon
+}
+
+class com.example.donemate.Settings {
++  icon
+}
+
+class com.example.donemate.ResetPassword {
+}
+class com.example.donemate.Permission {
++ String taskTitle
+}
+
+class com.example.donemate.Preview {
++ String taskTitle
+}
+
+class com.example.donemate.Inspiration {
++  icon
+}
+
+interface com.example.donemate.data.remote.QuoteApi {
++ void getQuotes(void)
+}
+
+interface com.example.donemate.domain.sync.OfflineFirstTasksRepository {
++ void insert(Task)
++ void delete(String)
++ void update(Task)
++ void deleteIfPrivateFile(String)
++ void sync()
++ Boolean isNetworkAvailable()
++ Flow<List<Task>> getTasks()
++ Task? getTaskById(String)
++ void markAsDeleted(Task)
+}
+
+class com.example.donemate.data.local.ThemeRepositoryImpl {
++ <<Create>> ThemeRepositoryImpl(,DataStore<Preferences>)
+}
+
+class com.example.donemate.data.local.null {
++  ISDARKTHEME
+}
+
+class com.example.donemate.AppThemeViewModel {
++ <<Create>> AppThemeViewModel(,ThemeRepositoryImpl)
+}
+
+class com.example.donemate.data.local.db.null {
+}
+class com.example.donemate.data.local.db.null {
+}
+abstract class com.example.donemate.data.local.db.Database {
++ TasksDao taskPictureDao()
++ RemoteKeyDao remoteKeyDao()
++ QuotesDao quotesDao()
+}
+
+class com.example.donemate.data.local.AndroidImageStorage {
++ <<Create>> AndroidImageStorage(Application)
++ String write(ByteArray)
++ ByteArray read(String)
+}
+
+class com.example.donemate.data.camera.CameraState {
++ <<Create>> CameraState(,Boolean,,Float)
+}
+
+class com.example.donemate.data.camera.CameraXCameraSystem {
++ <<Create>> CameraXCameraSystem(,Application)
+}
+
+class com.example.donemate.data.camera.null {
++ void onError(ImageCaptureException)
++ void onImageSaved(ImageCapture.OutputFileResults)
+}
+
+interface com.example.donemate.domain.local.AlarmsRepository {
++ void insert()
++ void edit()
++ void delete()
+}
+
+abstract class com.example.donemate.di.ServiceModule {
++ AccountRepository provideAccountService(AccountRepositoryImpl)
++ FirestoreRepository provideStorageService(FirestoreRepositoryImpl)
++ StorageRepository provideMediaService(StorageRepositoryImpl)
+}
+
+interface com.example.donemate.data.local.db.QuotesDao {
++ void insertAll(List<QuoteEntity>)
++ PagingSource<Int, QuoteEntity> pagingSource()
++ void clearAll()
+}
+
+class com.example.donemate.data.remote.StorageRepositoryImpl {
++ <<Create>> StorageRepositoryImpl(FirebaseStorage,FirebaseFirestore)
++ String uploadPicture(String,ByteArray)
++ ByteArray downloadPicture(String)
++ void deletePicture(String)
+}
+
+class com.example.donemate.data.local.models.TaskEntity {
++ <<Create>> TaskEntity(,,String,,String,,Int,,String,,Instant?,,String?,,Long,,Boolean,,Boolean)
+}
+
+class com.example.donemate.ChangeTaskProgressStageReceiver {
++ OfflineFirstTasksRepository offlineFirstTasksRepository
++ void onReceive(Context,Intent)
+}
+
+
+class com.example.donemate.data.local.NotificationHelper {
+-  appContext
+- NotificationManager notificationManager
+-  reminderChannelName
++ <<Create>> NotificationHelper(Context,TasksDao)
++ void setUpNotificationChannel()
++ void createMessageAndShow(String)
+}
+
+
+class com.example.donemate.ui.screens.link_account.LinkAccountViewModel {
++ <<Create>> LinkAccountViewModel(,AccountRepository)
+}
+
+class com.example.donemate.ui.screens.link_account.LinkAccountUiState {
++ <<Create>> LinkAccountUiState(,String,,String,,String,)
+}
+
+interface com.example.donemate.domain.remote.FirestoreRepository {
++ List<NetworkTask> getTasks()
++ NetworkTask? getTask(String)
++ String save(NetworkTask)
++ void update(NetworkTask)
++ void delete(String)
+}
+
+class com.example.donemate.AlarmReceiver {
++ NotificationHelper notificationHelper
++ void onReceive(Context,Intent)
+}
+
+
+interface com.example.donemate.data.local.TasksDao {
++ void insert(TaskEntity)
++ void markAsDeleted(String)
++ void deleteAll()
++ void update(TaskEntity)
++ TaskEntity? getTask(String)
++ List<TaskEntity> getTasksNeedingSync()
++ void markUploaded(String)
++ Flow<List<TaskEntity>> getNotDeletedTasks()
++ void delete(TaskEntity)
++ List<TaskEntity> getTasksIncludingDeleted()
+}
+
+class com.example.donemate.BootCompletedReceiver {
++ OfflineFirstTasksRepository offlineFirstTasksRepository
++ void onReceive(Context,Intent)
+}
+
+
+class com.example.donemate.data.sync.OfflineFirstTasksRepositoryImpl {
++ <<Create>> OfflineFirstTasksRepositoryImpl(,,Context,,StorageRepository,,FirestoreRepository,,AccountRepository,,TasksDao,,ImageStorage,,ReminderHelper)
+}
+
+class com.example.donemate.ui.screens.settings.SettingsViewModel {
++ <<Create>> SettingsViewModel(,AccountRepository,,TasksDao,,ThemeRepositoryImpl)
+}
+
+interface com.example.donemate.domain.local.ImageStorage {
++ String write(ByteArray)
++ ByteArray read(String)
+}
+
+class com.example.donemate.ui.screens.inspiration.InspirationViewModel {
++ <<Create>> InspirationViewModel(,QuotesDao,,RemoteKeyDao,,QuotesRepository)
+}
+
+class com.example.donemate.data.local.ReminderHelper {
+- AlarmManager? alarmMgr
++ <<Create>> ReminderHelper(Context)
++ void setReminder(Long?,String)
++ void cancelReminder(String)
+}
+
+
+class com.example.donemate.data.remote.models.User {
++ <<Create>> User(,String,,Boolean,,String?)
+}
+
+class com.example.donemate.ui.screens.sign_up.SignUpViewModel {
++ <<Create>> SignUpViewModel(,AccountRepository)
+}
+
+class com.example.donemate.ui.screens.sign_up.SignUpUiState {
++ <<Create>> SignUpUiState(,String,,String,,String)
+}
+
+class com.example.donemate.data.remote.model.NetworkQuote {
++ <<Create>> NetworkQuote(,)
+}
+
+class com.example.donemate.di.DataStoreModule {
+- DataStore<Preferences> dataStore
++ void providePreferencesDataStore(void)
+}
+
+
+class com.example.donemate.domain.model.Quote {
++ <<Create>> Quote(,String,,String,,String)
+}
+
+class com.example.donemate.DoneMateApplication {
+}
+class com.example.donemate.di.QuoteApiModule$null {
+}
+class com.example.donemate.di.QuoteApiModule {
++  BASE_URL
++ Retrofit provideRetrofit()
++ QuoteApi provideApiService(Retrofit)
+}
+
+
+interface com.example.donemate.domain.remote.AccountRepository {
++ String currentUserId
++ Flow<Boolean> hasUser
++ Flow<User?> currentUser
++ AuthResult authenticate(String,String)
++ AuthResult createAnonymousAccount()
++ AuthResult linkAccount(String,String)
++ AuthResult deleteAccount()
++ void signOut()
++ AuthResult resetPassword(String)
++ AuthResult createAccount(String,String)
++ AuthResult signInWithGoogle(String)
+}
+
+
+abstract class com.example.donemate.di.StorageModule {
++ ImageStorage bindImageStorage(AndroidImageStorage)
+}
+
+class com.example.donemate.data.remote.model.NetworkQuotesList {
++ <<Create>> NetworkQuotesList(,Int,,Int,,Int,,Int,,Int,,List<NetworkQuote>)
+}
+
+class com.example.donemate.di.CameraModule {
++ void realCameraSystem(void,Application)
++ void null()
+}
+
+interface com.example.donemate.domain.camera.CameraSystem {
++ void startCamera(LifecycleOwner)
++ StateFlow<SurfaceRequest?> getSurfaceRequest()
++ void toggleTorch()
++ void setZOOM(Float)
++ StateFlow<CameraState> getCurrentCameraState()
++ void focus(Offset)
++ Uri onCapture()
+}
+
+class com.example.donemate.ui.screens.add.AddViewModel {
+-  _uiState
++ StateFlow<Task> uiState
++ <<Create>> AddViewModel(OfflineFirstTasksRepository,ImageStorage,ReminderHelper)
++ void onTitleChange(String)
++ void onProgressChange(Int)
++ String writeGalleryImageIntoStorage(String)
++ void onSaveTask(String?)
++ void onDateTimeChange(Long?)
+}
+
+
+interface com.example.donemate.data.local.db.RemoteKeyDao {
++ RemoteKey? getRemoteKey()
++ void insertOrReplace(RemoteKey)
+}
+
+class com.example.donemate.di.DatabaseModule {
++ Database provideDatabase(Context)
++ TasksDao provideTaskPictureDao(Database)
++ RemoteKeyDao provideRemoteKeyDao(Database)
++ QuotesDao provideQuotesDao(Database)
+}
+
+class com.example.donemate.ui.screens.preview.PreviewViewModel {
+-  _surfaceRequest
++ StateFlow<SurfaceRequest?> surfaceRequest
+-  _uiState
++  uiState
++ <<Create>> PreviewViewModel(,CameraSystem)
++ void bindToCamera(LifecycleOwner)
++ void toggleTorch()
++ void setZoom(Float)
++ void tapToFocus(Offset)
++ Uri capture()
+}
+
+
+class com.example.donemate.di.FirebaseModule {
++ FirebaseAuth auth()
++ FirebaseFirestore firestore()
++ FirebaseStorage mediaStorage()
+}
+
+class com.example.donemate.data.local.model.RemoteKey {
++ <<Create>> RemoteKey(,,Int,,Int,Int?)
+}
+
+abstract class com.example.donemate.di.TasksRepositoryModule {
++ void bindOfflineFirstTasksRepository(void,OfflineFirstTasksRepositoryImpl)
++ void bindQuotesRepository(void,QuotesRepositoryImpl)
+}
+
+class com.example.donemate.data.remote.QuotesRepositoryImpl {
+}
+class com.example.donemate.ui.screens.sign_in.SignInViewModel {
++ <<Create>> SignInViewModel(,AccountRepository)
+}
+
+class com.example.donemate.ui.screens.sign_in.SignInUiState {
++ <<Create>> SignInUiState(,String,,String,,String,)
+}
+
+class com.example.donemate.domain.model.Progress$Companion {
++ Progress fromInt(Int)
++ void null()
++ String labelFromInt(Int)
+}
+
+enum com.example.donemate.domain.model.Progress {
++ <<Create>> Progress(Int,String)
+}
+
+class com.example.donemate.domain.model.Task {
++ <<Create>> Task(,String,,String,,Instant?,,Int,,String?)
+}
+
+class com.example.donemate.data.paging.InspirationRemoteMediator {
++ <<Create>> InspirationRemoteMediator(,QuotesDao,,RemoteKeyDao,,QuotesRepository)
+}
+
+class com.example.donemate.data.local.db.Converters {
++ Long? fromInstant(Instant?)
++ Instant? toInstant(Long?)
+}
+
+
+
+androidx.activity.ComponentActivity <|-- com.example.donemate.MainActivity
+com.example.donemate.data.remote.AuthResult +.. com.example.donemate.data.remote.AuthResult$NotStarted
+com.example.donemate.data.remote.AuthResult <|-- com.example.donemate.data.remote.AuthResult$NotStarted
+com.example.donemate.data.remote.AuthResult +.. com.example.donemate.data.remote.AuthResult$Success
+com.example.donemate.data.remote.AuthResult <|-- com.example.donemate.data.remote.AuthResult$Success
+com.example.donemate.data.remote.AuthResult +.. com.example.donemate.data.remote.AuthResult$Error
+com.example.donemate.data.remote.AuthResult <|-- com.example.donemate.data.remote.AuthResult$Error
+com.example.donemate.domain.remote.AccountRepository <|.. com.example.donemate.data.remote.AccountRepositoryImpl
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.SignUp
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.SignIn
+com.example.donemate.TopLevelRoute <|.. com.example.donemate.Tasks
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.Edit
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.Add
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.LinkAccount
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.TopLevelRoute
+com.example.donemate.TopLevelRoute <|.. com.example.donemate.Settings
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.ResetPassword
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.Permission
+androidx.navigation3.runtime.NavKey <|.. com.example.donemate.Preview
+com.example.donemate.TopLevelRoute <|.. com.example.donemate.Inspiration
+androidx.room.RoomDatabase <|-- com.example.donemate.data.local.db.Database
+com.example.donemate.domain.local.ImageStorage <|.. com.example.donemate.data.local.AndroidImageStorage
+com.example.donemate.data.camera.OnImageSavedCallback <|.. com.example.donemate.data.camera.null
+com.example.donemate.domain.remote.StorageRepository <|.. com.example.donemate.data.remote.StorageRepositoryImpl
+android.content.BroadcastReceiver <|-- com.example.donemate.ChangeTaskProgressStageReceiver
+android.content.BroadcastReceiver <|-- com.example.donemate.AlarmReceiver
+android.content.BroadcastReceiver <|-- com.example.donemate.BootCompletedReceiver
+android.app.Application <|-- com.example.donemate.DoneMateApplication
+com.example.donemate.di.QuoteApiModule +.. com.example.donemate.di.QuoteApiModule$null
+androidx.lifecycle.ViewModel <|-- com.example.donemate.ui.screens.add.AddViewModel
+androidx.lifecycle.ViewModel <|-- com.example.donemate.ui.screens.preview.PreviewViewModel
+com.example.donemate.domain.model.Progress +.. com.example.donemate.domain.model.Progress$Companion
+@enduml

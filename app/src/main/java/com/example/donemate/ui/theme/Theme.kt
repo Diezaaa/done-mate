@@ -1,6 +1,5 @@
 package com.example.donemate.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +32,7 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+// מגדיר את ערכת העיצוב של האפליקציה לפי מצב בהיר או כהה.
 @Composable
 fun DoneMateTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

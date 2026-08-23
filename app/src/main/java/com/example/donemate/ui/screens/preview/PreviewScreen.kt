@@ -53,6 +53,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
+
 @Composable
 fun PreviewScreen(
     taskTitle: String,
@@ -74,7 +76,7 @@ fun PreviewScreen(
     val autofocusCoords = remember(autofocusRequestId) { autofocusRequest.second }
     if (showAutofocusIndicator) {
         LaunchedEffect(autofocusRequestId) {
-            delay(1000)
+            delay(1000.milliseconds)
             autofocusRequest = autofocusRequestId to Offset.Unspecified
         }
     }
@@ -167,7 +169,6 @@ fun PreviewScreen(
                     Text("Set this as task image")
                 }
 
-                // Zoom text (on the right)
                 Text(
                     text = "${"%.1f".format(uiState.zoomRatio.toDouble())}x",
                     color = Color.White,

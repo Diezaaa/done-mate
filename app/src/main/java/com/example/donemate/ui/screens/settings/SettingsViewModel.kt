@@ -1,66 +1,99 @@
 package com.example.donemate.ui.screens.settings
 
+import androidx.credentials.Credential
+import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.data.local.ThemeRepositoryImpl
-import com.example.donemate.data.remote.models.User
-import com.example.donemate.domain.remote.AccountRepository
+import com.example.donemate.data.model.User
+import com.example.donemate.data.repository.local.PreferencesRepository
+import com.example.donemate.data.repository.remote.AccountRepository
+import com.example.donemate.data.repository.offline_first.TasksRepository
+import com.example.donemate.data.repository.remote.AuthResult
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
-    private val themeRepositoryImpl: ThemeRepositoryImpl
-) : ViewModel()  {
-    val currentEmail: StateFlow<String?> = accountRepository.currentUser
-        .map { user -> user?.email }
-        .stateIn(
+    private val tasksRepository: TasksRepository,
+    private val preferencesRepository: PreferencesRepository,
+) : ViewModel() {
+
+    private val errorMessage = MutableStateFlow<String?>(null)
+
+    val uiState: StateFlow<SettingsUiState> =
+        combine(
+            preferencesRepository.isDarkTheme,
+            accountRepository.userProfile,
+            errorMessage
+        ) { isDarkTheme, userProfile, errorMessage ->
+            SettingsUiState(
+                userProfile = userProfile,
+                isDarkTheme = isDarkTheme,
+                isLoading = false,
+                errorMessage = errorMessage
+            )
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = null
+            initialValue = SettingsUiState(User(), false, true, null)
         )
-    val currentUser: StateFlow<User?> = accountRepository.currentUser.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        null
-    )
-
-    private val _hasUser: StateFlow<Boolean> = accountRepository.hasUser.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        true
-    )
-
-    val hasUser: StateFlow<Boolean> = _hasUser
-
-    private var _isDarkTheme: StateFlow<Boolean> = themeRepositoryImpl.isDarkTheme.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        true
-    )
-    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme
 
 
-    fun onChangeTheme(){
+    fun updateTheme(isDarkTheme: Boolean) {
         viewModelScope.launch {
-            themeRepositoryImpl.changeTheme(!isDarkTheme.value)
+            preferencesRepository.changeTheme(isDarkTheme)
         }
     }
-    fun onLogOut(){
+
+    fun linkGoogle(credential: Credential) {
+        viewModelScope.launch {
+            if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                val googleIdTokenCredential =
+                    GoogleIdTokenCredential.createFrom(credential.data)
+                val result = accountRepository.linkGoogle(googleIdTokenCredential.idToken)
+                if (result is AuthResult.Error) {
+                    errorMessage.value = result.message
+                }
+            }
+        }
+    }
+
+    fun signOut() {
         viewModelScope.launch {
             accountRepository.signOut()
+            tasksRepository.deleteAll()
         }
     }
 
-    fun onDeleteAccount(){
+    fun deleteAccount() {
         viewModelScope.launch {
-            accountRepository.deleteAccount()
+            val result = accountRepository.deleteAccount()
+            if (result is AuthResult.Error) {
+                errorMessage.value = result.message
+            }
+            else {
+                tasksRepository.deleteAll()
+            }
         }
     }
+
+    fun errorMessageShown() {
+        errorMessage.value = null
+    }
 }
+
+data class SettingsUiState(
+    val userProfile: User?,
+    val isDarkTheme: Boolean,
+    val isLoading: Boolean,
+    val errorMessage: String?
+)

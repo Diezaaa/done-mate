@@ -1,0 +1,13 @@
+package com.example.donemate.data.repository.offline_first
+
+import androidx.paging.PagingSource
+import com.example.donemate.data.common.Result
+import com.example.donemate.data.database.model.QuoteEntity
+import com.example.donemate.data.remote.model.RemoteQuotesList
+
+interface QuotesRepository{
+    suspend fun getNetworkQuotesList(page: Int): Result<RemoteQuotesList>
+    fun getQuotesPagingSource(): PagingSource<Int, QuoteEntity>
+    suspend fun clearAll(): Result<Unit>
+    suspend fun insertAll(quotes: List<QuoteEntity>): Result<Unit>
+}

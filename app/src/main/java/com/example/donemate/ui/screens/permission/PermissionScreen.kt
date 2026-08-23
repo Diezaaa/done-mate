@@ -26,12 +26,11 @@ import com.google.accompanist.permissions.shouldShowRationale
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun PermissionScreen(taskTitle: String,onNavigateToPreview: () -> Unit) {
+fun PermissionScreen(onNavigateToPreview: () -> Unit) {
     val cameraPermissionState = rememberPermissionState(
         Manifest.permission.CAMERA
     )
 
-    // When LaunchedEffect watched after cameraPermissionState.status it didn't work, maybe baecaue it's an class object and not a simple type object
     LaunchedEffect(cameraPermissionState.status.isGranted) {
         if (cameraPermissionState.status.isGranted){
             onNavigateToPreview()

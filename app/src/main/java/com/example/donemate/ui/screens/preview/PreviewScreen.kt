@@ -59,7 +59,6 @@ import kotlin.time.Duration.Companion.milliseconds
 fun PreviewScreen(
     taskTitle: String,
     viewModel: PreviewViewModel,
-    modifier: Modifier = Modifier,
     onNavigateToTask: (uri: Uri) -> Unit,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
@@ -81,7 +80,7 @@ fun PreviewScreen(
         }
     }
 
-    Column(modifier.fillMaxSize()
+    Column(Modifier.fillMaxSize()
     ) {
         Box(
             modifier = Modifier

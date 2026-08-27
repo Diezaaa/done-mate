@@ -43,37 +43,38 @@ class BootCompletedReceiver : BroadcastReceiver() {
                             )
                         }
                 }
-            }
 
-            val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                alarmManager.canScheduleExactAlarms()
-            } else {
-                true
-            }
 
-            for (alarm in savedAlarms) {
-                val alarmIntent = Intent(context, AlarmReceiver::class.java).apply {
-                    putExtra("id", alarm.first)
+                val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    alarmManager.canScheduleExactAlarms()
+                } else {
+                    true
                 }
 
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    alarm.first.hashCode(),
-                    alarmIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
+                for (alarm in savedAlarms) {
+                    val alarmIntent = Intent(context, AlarmReceiver::class.java).apply {
+                        putExtra("id", alarm.first)
+                    }
 
-                if (canScheduleExact) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        alarm.second,
-                        pendingIntent
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        alarm.first.hashCode(),
+                        alarmIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                     )
-                }
-            }
-            Log.d("BootReceiver", "Alarms restored")
-            pendingResult.finish()
 
+                    if (canScheduleExact) {
+                        alarmManager.setExactAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            alarm.second,
+                            pendingIntent
+                        )
+                    }
+                }
+                Log.d("BootReceiver", "Alarms restored")
+                pendingResult.finish()
+
+            }
         }
     }
 }

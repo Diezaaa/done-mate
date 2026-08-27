@@ -60,11 +60,11 @@ import com.google.accompanist.permissions.rememberPermissionState
 fun TaskScreen(
     vm: TaskViewModel,
     id: String?,
-    navigateToTasks: () -> Unit,
-    navigateToPermission: (String) -> Unit,
-    navigateToPreview: (String) -> Unit,
+    onNavigateToTasks: () -> Unit,
+    onNavigateToPermission: (String) -> Unit,
+    onNavigateToPreview: (String) -> Unit,
     cameraImageUri: String?,
-    ) {
+) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -76,19 +76,19 @@ fun TaskScreen(
 
     LaunchedEffect(uiState) {
         if (uiState is TaskFormUiState.Saved) {
-            navigateToTasks()
+            onNavigateToTasks()
         }
     }
 
     TaskScreen(
         uiState = uiState,
-        navigateToTasks = navigateToTasks,
+        onNavigateToTasks = onNavigateToTasks,
         onTitleChange = vm::updateTitle,
         onProgressChange = vm::updateProgress,
         onSaveClick = vm::saveTask,
         onReminderDateTimeChange = vm::updateReminderDateTime,
-        navigateToPermission = navigateToPermission,
-        navigateToPreview = navigateToPreview,
+        onNavigateToPermission = onNavigateToPermission,
+        onNavigateToPreview = onNavigateToPreview,
         cameraImageUri = cameraImageUri,
         onImageChange = vm::updateImageUri,
         onDueDateTimeChange = vm::updateDueDateTime,
@@ -107,12 +107,12 @@ fun TaskScreen(
     onTitleChange: (String) -> Unit,
     onProgressChange: (Int) -> Unit,
     onSaveClick: () -> Unit,
-    navigateToPermission: (String) -> Unit,
-    navigateToPreview: (String) -> Unit,
+    onNavigateToPermission: (String) -> Unit,
+    onNavigateToPreview: (String) -> Unit,
     cameraImageUri: String?,
     onImageChange: (String) -> Unit,
     uiState: TaskFormUiState,
-    navigateToTasks: () -> Unit,
+    onNavigateToTasks: () -> Unit,
     onDueDateTimeChange: (Long?) -> Unit,
     onDescriptionChange: (String) -> Unit
 ) {
@@ -159,9 +159,10 @@ fun TaskScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { navigateToTasks() }) {
+                    IconButton(onClick = { onNavigateToTasks() }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back"
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
@@ -263,9 +264,9 @@ fun TaskScreen(
                         onDismissRequest = { showImagePickerDialog = false },
                         onCameraOptionClick = {
                             if (!cameraPermissionState.status.isGranted) {
-                                navigateToPermission(uiState.task.title)
+                                onNavigateToPermission(uiState.task.title)
                             } else {
-                                navigateToPreview(uiState.task.title)
+                                onNavigateToPreview(uiState.task.title)
                             }
                         },
                         onGalleryOptionClick = {

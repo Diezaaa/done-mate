@@ -1,6 +1,5 @@
 package com.example.donemate
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.donemate.data.model.User
@@ -12,7 +11,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
@@ -26,12 +24,14 @@ class MainActivityViewModel @Inject constructor(
     val uiState: StateFlow<MainActivityUiState> = combine(
         preferencesRepository.isDarkTheme,
         accountRepository.userProfile,
-        isOfflineDialogShownOnce
-    ) { isDarkTheme, userProfile, isOfflineDialogShownOnce ->
+        isOfflineDialogShownOnce,
+        accountRepository.isUserVerified
+    ) { isDarkTheme, userProfile, isOfflineDialogShownOnce, isUserVerified ->
         MainActivityUiState.Success(
             userProfile = userProfile,
             isDarkTheme = isDarkTheme,
-            isOfflineDialogShownOnce = isOfflineDialogShownOnce
+            isOfflineDialogShownOnce = isOfflineDialogShownOnce,
+            isUserVerified = isUserVerified
         )
     }.stateIn(
         scope = viewModelScope,
@@ -49,11 +49,13 @@ sealed interface MainActivityUiState {
     data class Success(
         override val userProfile: User?,
         override val isDarkTheme: Boolean,
-        override val isOfflineDialogShownOnce: Boolean
+        override val isOfflineDialogShownOnce: Boolean,
+        override val isUserVerified: Boolean?
     ) : MainActivityUiState
 
     val userProfile: User? get() = null
     val isDarkTheme: Boolean get() = false
+    val isUserVerified: Boolean? get() = null
     val isOfflineDialogShownOnce: Boolean get() = false
 
     fun shouldKeepSplashScreen(): Boolean { return this is Loading }

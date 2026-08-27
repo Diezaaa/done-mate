@@ -18,8 +18,7 @@ class VerifyEmailViewModel @Inject constructor(
     private val accountRepository: AccountRepository
 ) : ViewModel() {
     val user: StateFlow<VerifyEmailUiState> = accountRepository.userProfile.map {
-        if (it != null) VerifyEmailUiState.Success(it)
-        else VerifyEmailUiState.Loading
+        VerifyEmailUiState.Success(it)
     }
         .stateIn(
             scope = viewModelScope,
@@ -27,17 +26,12 @@ class VerifyEmailViewModel @Inject constructor(
             initialValue = VerifyEmailUiState.Loading
         )
 
-    fun unlinkAllAuthProviders() {
+    fun unlinkAuthProvidersExceptEmail() {
         viewModelScope.launch {
             accountRepository.unlinkAuthProvidersExceptEmail()
         }
     }
 
-    fun signOut() {
-        viewModelScope.launch {
-            accountRepository.signOut()
-        }
-    }
 }
 
 sealed interface VerifyEmailUiState {

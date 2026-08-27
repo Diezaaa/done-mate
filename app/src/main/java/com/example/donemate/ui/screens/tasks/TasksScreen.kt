@@ -66,8 +66,8 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun TasksScreen(
     vm: TasksViewModel,
-    navigateToEdit: (id: String) -> Unit,
-    navigateToAdd: () -> Unit,
+    onNavigateToEdit: (id: String) -> Unit,
+    onNavigateToAdd: () -> Unit,
     isOfflineDialogShownOnce: Boolean,
     onOfflineDialogDismiss: () -> Unit
 ) {
@@ -77,8 +77,8 @@ fun TasksScreen(
         uiState = uiState,
         onTaskProgressChange = vm::updateTaskProgress,
         onDeleteTaskClick = vm::deleteTask,
-        navigateToEdit = navigateToEdit,
-        navigateToAdd = navigateToAdd,
+        onNavigateToEdit = onNavigateToEdit,
+        onNavigateToAdd = onNavigateToAdd,
         onQueryChange = vm::updateQuery,
         onProgressFilterChange = vm::updateProgressFilter,
         onSortingTypeChange = vm::updateSortingType,
@@ -94,8 +94,8 @@ fun TasksList(
     uiState: TasksUiState,
     onTaskProgressChange: (Task, Int) -> Unit,
     onDeleteTaskClick: (Task) -> Unit,
-    navigateToEdit: (String) -> Unit,
-    navigateToAdd: () -> Unit,
+    onNavigateToEdit: (String) -> Unit,
+    onNavigateToAdd: () -> Unit,
     onQueryChange: (String) -> Unit,
     onProgressFilterChange: (Int) -> Unit,
     onSortingTypeChange: (SortingType) -> Unit,
@@ -228,7 +228,7 @@ fun TasksList(
                                                 task,
                                                 onTaskProgressChange = onTaskProgressChange,
                                                 onDeleteTaskClick = onDeleteTaskClick,
-                                                navigateToEdit = navigateToEdit
+                                                onNavigateToEdit = onNavigateToEdit
                                             )
                                         }
                                     }
@@ -356,7 +356,7 @@ fun TasksList(
                                         task = task,
                                         onTaskProgressChange = onTaskProgressChange,
                                         onDeleteTaskClick = onDeleteTaskClick,
-                                        navigateToEdit = navigateToEdit
+                                        onNavigateToEdit = onNavigateToEdit
                                     )
                                 }
                             }
@@ -366,7 +366,7 @@ fun TasksList(
             }
         }
         FloatingActionButton(
-            onClick = { navigateToAdd() },
+            onClick = { onNavigateToAdd() },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -381,14 +381,14 @@ fun TaskItem(
     task: Task,
     onTaskProgressChange: (Task, Int) -> Unit,
     onDeleteTaskClick: (Task) -> Unit,
-    navigateToEdit: (id: String) -> Unit
+    onNavigateToEdit: (id: String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
 
     Card(modifier = Modifier
         .fillMaxWidth()
-        .clickable { navigateToEdit(task.id) }) {
+        .clickable { onNavigateToEdit(task.id) }) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {

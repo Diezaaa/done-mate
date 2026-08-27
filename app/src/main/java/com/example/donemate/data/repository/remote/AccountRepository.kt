@@ -6,10 +6,13 @@ import kotlinx.coroutines.flow.Flow
 interface AccountRepository {
     val userProfile: Flow<User?>
     fun getUserId(): String?
+    val isEmailVerified: Flow<Boolean?>
+    val isUserVerified: Flow<Boolean?>
     suspend fun updatePassword(oldPassword: String, newPassword: String): AuthResult
-    suspend fun changeEmail(email: String): AuthResult
+    suspend fun updateEmail(email: String): AuthResult
     suspend fun signInWithEmailAndPassword(email: String, password: String): AuthResult
     suspend fun linkEmail(email: String, password: String): AuthResult
+    suspend fun unlinkEmail(): AuthResult
     suspend fun deleteAccount(): AuthResult
     suspend fun signOut(): AuthResult
     suspend fun unlinkAuthProvidersExceptEmail(): AuthResult

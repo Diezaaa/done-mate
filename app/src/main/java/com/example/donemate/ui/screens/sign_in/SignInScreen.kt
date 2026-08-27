@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,10 +35,11 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SignInScreen(
-    navigateToSignUp: () -> Unit,
+    onNavigateToSignUp: () -> Unit,
     vm: SignInViewModel,
-    navigateToResetPassword: () -> Unit,
-    navigateToTasks: () -> Unit,
+    onNavigateToResetPassword: () -> Unit,
+    onNavigateToTasks: () -> Unit,
+    onNavigateToVerifyEmail: (String) -> Unit,
     onShowSnackbar: suspend (String) -> SnackbarResult,
 ) {
 
@@ -53,16 +53,19 @@ fun SignInScreen(
         }
     }
 
-    LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let {
+    LaunchedEffect(uiState.authForm.errorMessage) {
+        uiState.authForm.errorMessage?.let {
             onShowSnackbar(it)
             vm.errorMessageShown()
         }
     }
 
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            navigateToTasks()
+
+    LaunchedEffect(uiState.isUserVerified) {
+        if (uiState.isUserVerified == true) {
+            onNavigateToTasks()
+        } else if (uiState.isUserVerified == false){
+            onNavigateToVerifyEmail(uiState.authForm.email)
         }
     }
 
@@ -74,7 +77,7 @@ fun SignInScreen(
     ) {
         Column(
             modifier = Modifier
-                .width(IntrinsicSize.Max),
+                .width(300.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -82,14 +85,15 @@ fun SignInScreen(
                 "Sign In",
                 fontSize = 35.sp
             )
+            Spacer(modifier = Modifier.height(8.dp))
             AuthForm(
-                email = uiState.email,
-                password = uiState.password,
+                email = uiState.authForm.email,
+                password = uiState.authForm.password,
                 onEmailChange = vm::updateEmail,
                 onPasswordChange = vm::updatePassword
             )
             Text(text = "Forgot password?", modifier = Modifier.clickable {
-                navigateToResetPassword()
+                onNavigateToResetPassword()
             }.fillMaxWidth(), textAlign = TextAlign.Start)
             Button(
                 onClick = {
@@ -99,11 +103,6 @@ fun SignInScreen(
             ) {
                 Text("Sign in")
             }
-            Text(
-                text = "Don’t have an account?",
-                modifier = Modifier.clickable {
-                    navigateToSignUp()
-                })
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -126,6 +125,13 @@ fun SignInScreen(
             ContinueWithGoogleButton("Continue with Google") {
                 vm.continueWithGoogle(it)
             }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Don’t have an account?",
+                modifier = Modifier.clickable {
+                    onNavigateToSignUp()
+                })
         }
     }
 }

@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-// TODO: Make sure I handle the splash screen and the first screen ths user sees correctly
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val mainActivityViewModel: MainActivityViewModel by viewModels()
@@ -69,7 +68,8 @@ class MainActivity : ComponentActivity() {
                 Log.d("MainActivity", mainActivityUiState.userProfile.toString())
                 DoneMateTheme(darkTheme = mainActivityUiState.isDarkTheme) {
                     DoneMateApp(
-                        user = mainActivityUiState.userProfile,
+                        userProfile = mainActivityUiState.userProfile,
+                        isUserVerified = mainActivityUiState.isUserVerified,
                         onOfflineDialogDismiss = mainActivityViewModel::onOfflineDialogDismiss,
                         offlineDialogShownOnce = mainActivityUiState.isOfflineDialogShownOnce
                     )

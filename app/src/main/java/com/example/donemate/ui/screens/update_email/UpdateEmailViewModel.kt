@@ -1,4 +1,4 @@
-package com.example.donemate.ui.screens.change_email
+package com.example.donemate.ui.screens.update_email
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,55 +11,44 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class ChangeEmailUiState(
+data class UpdateEmailUiState(
     val email: String = "",
     val password: String = "",
-    val isFailure: Boolean? = null,
     val errorMessage: String? = null,
-    val shouldRedirectToVerification: Boolean = false
+    val isSuccess: Boolean? = null
 )
 
 @HiltViewModel
-class ChangeEmailViewModel @Inject constructor(
+class UpdateEmailViewModel @Inject constructor(
     private val accountRepository: AccountRepository
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(
-        ChangeEmailUiState()
-    )
-    val uiState: StateFlow<ChangeEmailUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(UpdateEmailUiState())
+
+    val uiState: StateFlow<UpdateEmailUiState> = _uiState.asStateFlow()
+
 
     fun updateEmail(email: String) {
         _uiState.value = _uiState.value.copy(email = email)
     }
 
-    fun changeEmail() {
+    fun updateUserEmail() {
         viewModelScope.launch {
-            val result = accountRepository.changeEmail(email = _uiState.value.email)
-            when (result) {
+            when (val result = accountRepository.updateEmail(email = _uiState.value.email)) {
                 is AuthResult.Success -> {
-                    _uiState.value = _uiState.value.copy(isFailure = false)
-                    _uiState.value = _uiState.value.copy(shouldRedirectToVerification = true)
-
+                    _uiState.value = _uiState.value.copy(isSuccess = true)
                 }
-                is AuthResult.Error -> {
-                    _uiState.value = _uiState.value.copy(isFailure = true)
-                    _uiState.value = _uiState.value.copy(errorMessage = result.message)
 
+                is AuthResult.Error -> {
+                    _uiState.value = _uiState.value.copy(errorMessage = result.message)
                 }
             }
-
         }
     }
 
-    fun changeShouldRedirectToVerification(shouldRedirectToVerification: Boolean){
-        _uiState.value = _uiState.value.copy(
-            shouldRedirectToVerification = shouldRedirectToVerification
-        )
-    }
 
     fun errorMessageShown() {
         _uiState.value = _uiState.value.copy(
-            isFailure = null
+            errorMessage = null
         )
     }
 }

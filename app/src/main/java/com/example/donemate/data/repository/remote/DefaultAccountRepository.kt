@@ -26,6 +26,8 @@ sealed class AuthResult {
     data class Error(val message: String) : AuthResult()
 }
 
+private const val TAG = "DefaultAccountRepository"
+
 class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAuth) :
     AccountRepository {
 
@@ -36,20 +38,32 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
             if (firebaseUser == null)
                 null
             else {
-                val email =
-                    firebaseUser.providerData.find {
-                        it.providerId == GoogleAuthProvider.PROVIDER_ID
-                    }?.email ?: firebaseUser.providerData.find {
-                        it.providerId == EmailAuthProvider.PROVIDER_ID
-                    }?.email
                 User(
-                    email = email,
-                    isAnonymous = firebaseUser.isAnonymous,
-                    isVerified = firebaseUser.isEmailVerified,
+                    email = firebaseUser.email,
+                    googleEmail = firebaseUser.providerData.find { it.providerId == GoogleAuthProvider.PROVIDER_ID }?.email,
+                    isEmailVerified = firebaseUser.isEmailVerified,
                     authProviders = firebaseUser.providerData.map { it.providerId }
                 )
             }
         }
+
+    // NOTE: User is verified when he has verified his email or/and is linked with Google
+    override val isUserVerified: Flow<Boolean?> =
+        userProfile.map { it ->
+            if (it == null) return@map null
+            else {
+                it.isEmailVerified || auth.currentUser?.providerData?.any {
+                    it.providerId == GoogleAuthProvider.PROVIDER_ID
+                } == true
+            }
+        }
+
+    override val isEmailVerified: Flow<Boolean?> =
+        userProfile.map {
+            if (it == null) return@map null
+            it.isEmailVerified
+        }
+
 
     // Learn more about flows and REFACTOR this function
     fun firebaseUser(): Flow<FirebaseUser?> = channelFlow {
@@ -59,14 +73,13 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
         }
     }
 
-    // Learn more about flows and refactor this function
+    // Learn more about flows and REFACTOR this function
     private suspend fun reloadFirebaseUser(scope: ProducerScope<FirebaseUser?>) {
         try {
             auth.currentUser!!.reload().await()
             scope.send(auth.currentUser)
-        } catch (e: Exception) {
-            Log.d("TAG", e.toString())
-            scope.send(null)
+        } catch (_: Exception) {
+            scope.send(auth.currentUser)
         }
     }
 
@@ -88,14 +101,14 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
         }
     }
 
-    override suspend fun changeEmail(email: String): AuthResult {
+    override suspend fun updateEmail(email: String): AuthResult {
         return try {
             firebaseUser().first()!!.verifyBeforeUpdateEmail(email).await()
             return AuthResult.Success
-        } catch (firebaseAuthRecentLoginRequiredException: FirebaseAuthRecentLoginRequiredException) {
+        } catch (_: FirebaseAuthRecentLoginRequiredException) {
             AuthResult.Error("Re-login and then try again")
         } catch (e: Exception) {
-            Log.d("TAG", e.toString())
+            Log.e(TAG, "updateEmail: ${e.message}")
             AuthResult.Error("Something went wrong")
         }
     }
@@ -106,7 +119,7 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
             AuthResult.Success
         } catch (_: FirebaseAuthInvalidCredentialsException) {
             AuthResult.Error("Invalid email or password")
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             AuthResult.Error("Something went wrong")
         }
     }
@@ -122,10 +135,10 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
             auth.signInWithEmailAndPassword(email, password).await()
             auth.currentUser!!.sendEmailVerification().await()
             AuthResult.Success
+        } catch (_: FirebaseAuthRecentLoginRequiredException) {
+            AuthResult.Error("Re-login and then try again")
         } catch (e: Exception) {
             auth.currentUser?.unlink(EmailAuthProvider.PROVIDER_ID)
-
-            Log.d("TAG", e.toString())
             AuthResult.Error("Something went wrong")
         }
     }
@@ -140,11 +153,10 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
                 firebaseUser.unlink(EmailAuthProvider.PROVIDER_ID).await()
             }
             AuthResult.Success
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             AuthResult.Error("Something went wrong")
         }
     }
-
 
     override suspend fun deleteAccount(): AuthResult {
         return try {
@@ -181,7 +193,7 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
     ): AuthResult {
         return try {
             auth.createUserWithEmailAndPassword(email, password).await()
-            firebaseUser().first()!!.sendEmailVerification()
+            firebaseUser().first()!!.sendEmailVerification().await()
             AuthResult.Success
         } catch (_: Exception) {
             AuthResult.Error("Something went wrong")
@@ -203,6 +215,15 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
         return try {
             firebaseUser().first()!!.providerData.filter { it.providerId != EmailAuthProvider.PROVIDER_ID && it.providerId != FirebaseAuthProvider.PROVIDER_ID }
                 .forEach { provider -> firebaseUser().first()!!.unlink(provider.providerId) }
+            AuthResult.Success
+        } catch (_: Exception) {
+            AuthResult.Error("Something went wrong")
+        }
+    }
+
+    override suspend fun unlinkEmail(): AuthResult {
+        return try {
+            firebaseUser().first()!!.unlink(EmailAuthProvider.PROVIDER_ID)
             AuthResult.Success
         } catch (_: Exception) {
             AuthResult.Error("Something went wrong")

@@ -32,7 +32,6 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
-// מגדיר את ערכת העיצוב של האפליקציה לפי מצב בהיר או כהה.
 @Composable
 fun DoneMateTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

@@ -23,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,9 +35,10 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun SignUpScreen(
     vm: SignUpViewModel,
-    navigateToSignIn: () -> Unit,
-    navigateToTasks: () -> Unit,
+    onNavigateToSignIn: () -> Unit,
+    onNavigateToTasks: () -> Unit,
     onShowSnackbar: suspend (String) -> SnackbarResult,
+    onNavigateToVerifyEmail: (String) -> Unit,
 ) {
 
     val context = LocalContext.current
@@ -51,16 +51,18 @@ fun SignUpScreen(
         }
     }
 
-    LaunchedEffect(uiState.errorMessage) {
-        if (uiState.errorMessage != null) {
+    LaunchedEffect(uiState.authForm.errorMessage) {
+        if (uiState.authForm.errorMessage != null) {
             onShowSnackbar("Something went wrong")
             vm.errorMessageShown()
         }
     }
 
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            navigateToTasks()
+    LaunchedEffect(uiState.isUserVerified) {
+        if (uiState.isUserVerified == true) {
+            onNavigateToTasks()
+        } else if (uiState.isUserVerified == false){
+            onNavigateToVerifyEmail(uiState.authForm.email)
         }
     }
 
@@ -81,9 +83,10 @@ fun SignUpScreen(
                 "Sign Up",
                 fontSize = 35.sp
             )
+            Spacer(modifier = Modifier.height(8.dp))
             AuthForm(
-                email = uiState.email,
-                password = uiState.password,
+                email = uiState.authForm.email,
+                password = uiState.authForm.password,
                 onEmailChange = vm::updateEmail,
                 onPasswordChange = vm::updatePassword,
             )
@@ -95,11 +98,6 @@ fun SignUpScreen(
             ) {
                 Text("Sign up")
             }
-            Text(
-                text = "Already have an account?",
-                modifier = Modifier.clickable {
-                    navigateToSignIn()
-                })
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -123,6 +121,13 @@ fun SignUpScreen(
             ContinueWithGoogleButton("Continue with Google") {
                 vm.continueWithGoogle(it)
             }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Already have an account?",
+                modifier = Modifier.clickable {
+                    onNavigateToSignIn()
+                })
         }
     }
 }

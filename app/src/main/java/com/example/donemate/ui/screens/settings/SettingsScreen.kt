@@ -1,6 +1,7 @@
 package com.example.donemate.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material3.Button
@@ -36,17 +39,18 @@ import androidx.credentials.Credential
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.donemate.data.model.User
 import com.example.donemate.ui.component.ContinueWithGoogleButton
+import com.example.donemate.ui.component.CustomLoadingIndicator
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 
 @Composable
 fun SettingsScreen(
     vm: SettingsViewModel,
-    navigateToLinkEmail: () -> Unit,
-    navigateToChangePassword: () -> Unit,
-    navigateToChangeEmail: () -> Unit,
+    onNavigateToLinkEmail: () -> Unit,
+    onNavigateToUpdatePassword: () -> Unit,
+    onNavigateToUpdateEmail: () -> Unit,
     onShowSnackbar: suspend (String) -> Unit,
-    navigateToSignUp: () -> Unit
+    onNavigateToSignUp: () -> Unit
 ) {
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()
@@ -54,16 +58,17 @@ fun SettingsScreen(
         uiState = uiState,
         onDeleteAccountClick = vm::deleteAccount,
         onSignOutClick = vm::signOut,
-        navigateToLinkEmail = navigateToLinkEmail,
-        onThemeChange = vm::updateTheme,
-        navigateToChangePassword = navigateToChangePassword,
-        navigateToChangeEmail = navigateToChangeEmail,
+        onNavigateToLinkEmail = onNavigateToLinkEmail,
+        onThemeChange = vm::changeTheme,
+        onNavigateToUpdatePassword = onNavigateToUpdatePassword,
+        onNavigateToUpdateEmail = onNavigateToUpdateEmail,
         onShowSnackbar = onShowSnackbar,
         onErrorMessageShown = vm::errorMessageShown,
         onLinkGoogle = { credential: Credential ->
             vm.linkGoogle(credential)
         },
-        navigateToSignUp = navigateToSignUp
+        onNavigateToSignUp = onNavigateToSignUp,
+        onUnlinkEmail = vm::unlinkEmail
     )
 }
 
@@ -72,176 +77,224 @@ fun SettingsScreen(
     uiState: SettingsUiState,
     onDeleteAccountClick: () -> Unit,
     onSignOutClick: () -> Unit,
-    navigateToLinkEmail: () -> Unit,
+    onNavigateToLinkEmail: () -> Unit,
     onThemeChange: (isDarkTheme: Boolean) -> Unit,
-    navigateToChangePassword: () -> Unit,
-    navigateToChangeEmail: () -> Unit,
+    onNavigateToUpdatePassword: () -> Unit,
+    onNavigateToUpdateEmail: () -> Unit,
     onShowSnackbar: suspend (String) -> Unit,
     onErrorMessageShown: () -> Unit,
     onLinkGoogle: (credential: Credential) -> Unit,
-    navigateToSignUp: () -> Unit
+    onNavigateToSignUp: () -> Unit,
+    onUnlinkEmail: () -> Unit
 ) {
 
 
-    LaunchedEffect(uiState.errorMessage) {
-        if (uiState.errorMessage != null) {
+    LaunchedEffect(uiState) {
+        if (uiState is SettingsUiState.Success && uiState.errorMessage != null) {
             onShowSnackbar(uiState.errorMessage)
             onErrorMessageShown()
         }
     }
 
-    LaunchedEffect(uiState.userProfile) {
-        if (uiState.userProfile == null) {
-            navigateToSignUp()
+    LaunchedEffect(uiState) {
+        if (uiState is SettingsUiState.Success && uiState.userProfile == null) {
+            onNavigateToSignUp()
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Text("Account", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+    when (uiState) {
+        is SettingsUiState.Loading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CustomLoadingIndicator()
+            }
+        }
 
-
-        if (uiState.userProfile?.isAnonymous == true) {
-            Text("You are currently signed in anonymously.")
-        } else if (uiState.userProfile?.authProviders?.contains(GoogleAuthProvider.PROVIDER_ID)
-                ?: false
-        ) {
-            Text("You are currently signed in with Google.\nEmail: ${uiState.userProfile.email}")
-        } else if (uiState.userProfile?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID)
-                ?: false
-        ) {
-            Text("You are currently logged in with email.\nEmail: ${uiState.userProfile.email}")
-            Button(
-                onClick = {
-                    navigateToChangeEmail()
-                },
-                modifier = Modifier.fillMaxWidth()
+        is SettingsUiState.Success -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(
-                    imageVector = Icons.Default.Mail,
-                    contentDescription = ""
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    "Change email",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
-            }
-            Button(
-                onClick = {
-                    navigateToChangePassword()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Password,
-                    contentDescription = ""
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    "Change password",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
-            }
-        }
+                Text("Account", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
-        if (!(uiState.userProfile?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID)
-                ?: false)
-        ) {
-            Button(
-                onClick = {
-                    navigateToLinkEmail()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Mail,
-                    contentDescription = ""
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    "Link email",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
-            }
-        }
-        if (!(uiState.userProfile?.authProviders?.contains(GoogleAuthProvider.PROVIDER_ID)
-                ?: false)
-        ) {
-            ContinueWithGoogleButton("Link Google", isCenteredText = false) { credential ->
-                onLinkGoogle(credential)
-            }
-        }
+                if ((uiState.userProfile?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID) == true &&
+                            uiState.userProfile.authProviders.contains(GoogleAuthProvider.PROVIDER_ID))
+                ) {
+                    Text("You are currently signed in with email and Google")
+                    Text("Google account's email: ${uiState.userProfile.googleEmail}")
+                    Text("Email: ${uiState.userProfile.email}${if (!uiState.userProfile.isEmailVerified) " (unverified)" else ""}")
+                } else if (uiState.userProfile?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID) == true) {
+                    Text("You are currently signed in with email.\nEmail: ${uiState.userProfile.email}${if (!uiState.userProfile.isEmailVerified) " (Unverified, check mailbox)" else ""}")
 
-        if (uiState.userProfile?.isAnonymous == false) {
-            Button(
-                onClick = {
-                    onDeleteAccountClick()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = ""
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    "Delete",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
-            }
-        }
-
-
-        Button(
-            onClick = {
-                onSignOutClick()
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Red,
-                contentColor = Color.White
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Logout,
-                contentDescription = ""
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                "Sign out",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Start
-            )
-        }
-
-        HorizontalDivider(thickness = 2.dp)
-        Text("Appearance", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Dark theme")
-
-            Switch(
-                checked = uiState.isDarkTheme,
-                onCheckedChange = {
-                    onThemeChange(it)
+                } else if (uiState.userProfile?.authProviders?.contains(GoogleAuthProvider.PROVIDER_ID) == true
+                ) {
+                    Text("You are currently signed in with Google.\nGoogle account's email: ${uiState.userProfile.googleEmail}")
                 }
-            )
+
+                if (uiState.userProfile?.authProviders?.contains(GoogleAuthProvider.PROVIDER_ID) == false
+                ) {
+                    Button(
+                        onClick = {
+                            onNavigateToUpdateEmail()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mail,
+                            contentDescription = ""
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Change email",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            onNavigateToUpdatePassword()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Password,
+                            contentDescription = ""
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Change password",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                }
+
+
+                if (uiState.userProfile?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID)
+                    == false || uiState.userProfile?.authProviders?.contains(
+                        GoogleAuthProvider.PROVIDER_ID
+                    ) == true
+                ) {
+                    Button(
+                        onClick = {
+                            onNavigateToLinkEmail()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Link,
+                            contentDescription = ""
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Link email",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                }
+
+                if ((uiState.userProfile?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID)
+                            == true) && uiState.userProfile.authProviders.contains(
+                        GoogleAuthProvider.PROVIDER_ID
+                    )
+                ) {
+                    Button(
+                        onClick = {
+                            onUnlinkEmail()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LinkOff,
+                            contentDescription = ""
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Unlink email",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                }
+
+                if (uiState.userProfile?.authProviders?.contains(GoogleAuthProvider.PROVIDER_ID)
+                    == false
+                ) {
+                    ContinueWithGoogleButton(
+                        onRequestResult = { credential: Credential ->
+                            onLinkGoogle(credential)
+                        },
+                        buttonText = "Link Google",
+                        isCenteredText = false,
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        onDeleteAccountClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = ""
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        "Delete",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start
+                    )
+                }
+
+
+                Button(
+                    onClick = {
+                        onSignOutClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = ""
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        "Sign out",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start
+                    )
+                }
+
+
+                HorizontalDivider(thickness = 2.dp)
+                Text("Appearance", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Dark theme")
+
+                    Switch(
+                        checked = uiState.isDarkTheme,
+                        onCheckedChange = {
+                            onThemeChange(it)
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -250,23 +303,61 @@ fun SettingsScreen(
 @Preview(
     showBackground = true,
 )
-fun SettingsScreenPreview() {
+fun SettingsScreenWithEmailOnlyAccountPreview() {
     SettingsScreen(
-        uiState = SettingsUiState(
-            userProfile = User(),
+        uiState = SettingsUiState.Success(
+            userProfile = User(
+                "abc@abc.abc",
+                true,
+                authProviders = listOf(EmailAuthProvider.PROVIDER_ID),
+            ),
             isDarkTheme = false,
-            isLoading = false,
             errorMessage = null,
         ),
         onDeleteAccountClick = {},
         onSignOutClick = {},
-        navigateToLinkEmail = {},
+        onNavigateToLinkEmail = {},
         onThemeChange = {},
-        navigateToChangePassword = {},
-        navigateToChangeEmail = {},
+        onNavigateToUpdatePassword = {},
+        onNavigateToUpdateEmail = {},
         onShowSnackbar = {},
         onErrorMessageShown = {},
         onLinkGoogle = {},
-        navigateToSignUp = {}
+        onNavigateToSignUp = {},
+        onUnlinkEmail = {}
     )
 }
+
+@Composable
+@Preview(
+    showBackground = true,
+)
+fun SettingsScreenWithEmailAndGoogleAccountPreview() {
+    SettingsScreen(
+        uiState = SettingsUiState.Success(
+            userProfile = User(
+                "abc@abc.abc",
+                true,
+                googleEmail = "cba@cba.cba",
+                authProviders = listOf(
+                    EmailAuthProvider.PROVIDER_ID,
+                    GoogleAuthProvider.PROVIDER_ID
+                ),
+            ),
+            isDarkTheme = false,
+            errorMessage = null,
+        ),
+        onDeleteAccountClick = {},
+        onSignOutClick = {},
+        onNavigateToLinkEmail = {},
+        onThemeChange = {},
+        onNavigateToUpdatePassword = {},
+        onNavigateToUpdateEmail = {},
+        onShowSnackbar = {},
+        onErrorMessageShown = {},
+        onLinkGoogle = {},
+        onNavigateToSignUp = {},
+        onUnlinkEmail = {}
+    )
+}
+

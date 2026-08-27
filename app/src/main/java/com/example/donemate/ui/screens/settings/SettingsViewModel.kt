@@ -35,25 +35,25 @@ class SettingsViewModel @Inject constructor(
             accountRepository.userProfile,
             errorMessage
         ) { isDarkTheme, userProfile, errorMessage ->
-            SettingsUiState(
+            SettingsUiState.Success(
                 userProfile = userProfile,
                 isDarkTheme = isDarkTheme,
-                isLoading = false,
                 errorMessage = errorMessage
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = SettingsUiState(User(), false, true, null)
+            initialValue = SettingsUiState.Loading
         )
 
 
-    fun updateTheme(isDarkTheme: Boolean) {
+    fun changeTheme(isDarkTheme: Boolean) {
         viewModelScope.launch {
             preferencesRepository.changeTheme(isDarkTheme)
         }
     }
 
+    // The function below gets data (credential) from the UI (screen). This violates SSOT\UDF
     fun linkGoogle(credential: Credential) {
         viewModelScope.launch {
             if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
@@ -89,11 +89,22 @@ class SettingsViewModel @Inject constructor(
     fun errorMessageShown() {
         errorMessage.value = null
     }
+
+    fun unlinkEmail() {
+        viewModelScope.launch {
+            val result = accountRepository.unlinkEmail()
+            if (result is AuthResult.Error) {
+                errorMessage.value = result.message
+            }
+        }
+    }
 }
 
-data class SettingsUiState(
-    val userProfile: User?,
-    val isDarkTheme: Boolean,
-    val isLoading: Boolean,
-    val errorMessage: String?
-)
+sealed interface SettingsUiState {
+    data class Success(
+        val userProfile: User?,
+        val isDarkTheme: Boolean,
+        val errorMessage: String?
+    ) : SettingsUiState
+    data object Loading : SettingsUiState
+}

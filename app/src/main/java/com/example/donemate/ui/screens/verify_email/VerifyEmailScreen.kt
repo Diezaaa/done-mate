@@ -25,59 +25,57 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.donemate.data.model.User
 import com.google.firebase.auth.EmailAuthProvider
-import com.google.firebase.auth.GoogleAuthProvider
 
 @Composable
 fun VerifyEmailScreen(
     vm: VerifyEmailViewModel,
-    onNavigateAfterVerification: () -> Unit,
+    onNavigateToTasks: () -> Unit,
     onNavigateBack: () -> Unit,
     emailToVerify: String?,
     onNavigateToSignUp: () -> Unit,
-    shouldDisplayBackButton: Boolean
 ) {
     val uiState by vm.user.collectAsStateWithLifecycle()
     VerifyEmailScreen(
         uiState = uiState,
-        onNavigateAfterVerification = onNavigateAfterVerification,
+        onNavigateToTasks = onNavigateToTasks,
         onNavigateBack = onNavigateBack,
-        unlinkAllAuthProviders = vm::unlinkAllAuthProviders,
+        onUnlinkAuthProvidersExceptEmail = vm::unlinkAuthProvidersExceptEmail,
         emailToVerify = emailToVerify,
-        onNavigateToSignUp = onNavigateToSignUp,
-        shouldDisplayBackButton = shouldDisplayBackButton,
-        onSignOut = vm::signOut,
+        onNavigateToSignUp = onNavigateToSignUp
     )
 }
 
 @Composable
 fun VerifyEmailScreen(
     uiState: VerifyEmailUiState,
-    onNavigateAfterVerification: () -> Unit,
+    onNavigateToTasks: () -> Unit,
     onNavigateBack: () -> Unit,
-    unlinkAllAuthProviders: () -> Unit,
+    onUnlinkAuthProvidersExceptEmail: () -> Unit,
     emailToVerify: String?,
-    shouldDisplayBackButton: Boolean = false,
-    onSignOut: () -> Unit,
-    onNavigateToSignUp: () -> Unit
+    onNavigateToSignUp: () -> Unit,
 ) {
 
     uiState.let { uiState ->
         if (uiState is VerifyEmailUiState.Success) {
             uiState.user.let { user ->
-                if (user == null) {
-                    onNavigateToSignUp()
-                } else {
-                    LaunchedEffect(uiState) {
-                        if (user.isVerified && user.email == emailToVerify) {
-                            unlinkAllAuthProviders()
-                            onNavigateAfterVerification()
-                        }
+                LaunchedEffect(user) {
+                    if (user?.isEmailVerified ?: false && user.email == emailToVerify) {
+                        onUnlinkAuthProvidersExceptEmail()
+                        onNavigateToTasks()
                     }
+                }
 
-                    LaunchedEffect(user) {
-                        if (!user.authProviders.contains(EmailAuthProvider.PROVIDER_ID)) {
-                            onNavigateBack()
-                        }
+                /* TODO: I think this code is redundant because there's no point in navigating
+                 the user back when there's no email. Note that the edit email button doesn't sign out. */
+                LaunchedEffect(user) {
+                    if (user?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID) == false) {
+                        onNavigateBack()
+                    }
+                }
+
+                LaunchedEffect(user) {
+                    if (user == null) {
+                        onNavigateToSignUp()
                     }
                 }
             }
@@ -101,7 +99,7 @@ fun VerifyEmailScreen(
             )
             Spacer(modifier = Modifier.height(15.dp))
             Text(
-                "Please verify your email", fontSize = 25.sp,
+                "Verify your email", fontSize = 25.sp,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(7.dp))
@@ -110,26 +108,13 @@ fun VerifyEmailScreen(
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(15.dp))
-            if (shouldDisplayBackButton) {
-                Button(
-                    onClick = {
-                        onNavigateBack()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Edit Email")
-                }
-            }
-            else{
-                Button(
-                    onClick = {
-                        onSignOut()
-                        onNavigateToSignUp()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ){
-                    Text("Sign out")
-                }
+            Button(
+                onClick = {
+                    onNavigateBack()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Edit Email")
             }
         }
     }
@@ -139,15 +124,13 @@ fun VerifyEmailScreen(
 @Composable
 fun VerificationScreenPreview() {
     VerifyEmailScreen(
-        onNavigateAfterVerification = {},
+        onNavigateToTasks = {},
         onNavigateBack = {},
-        unlinkAllAuthProviders = {},
+        onUnlinkAuthProvidersExceptEmail = {},
         emailToVerify = null,
         uiState = VerifyEmailUiState.Success(
             User()
         ),
-        onNavigateToSignUp = {},
-        shouldDisplayBackButton = true,
-        onSignOut = {}
+        onNavigateToSignUp = {}
     )
 }

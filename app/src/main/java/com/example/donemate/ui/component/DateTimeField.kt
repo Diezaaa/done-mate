@@ -1,18 +1,12 @@
 package com.example.donemate.ui.component
 
 import android.Manifest.permission.POST_NOTIFICATIONS
-import android.Manifest.permission.SCHEDULE_EXACT_ALARM
-import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -37,10 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat.startActivity
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -53,7 +44,6 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import androidx.core.net.toUri
 
-@SuppressLint("ServiceCast")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class, ExperimentalPermissionsApi::class)
 @Composable
 fun DateTimePickerField(
@@ -67,11 +57,13 @@ fun DateTimePickerField(
     var showTimePicker by remember { mutableStateOf(false) }
     var timeInMs by remember { mutableStateOf<Long?>(null) }
 
-    val alarmPermissionState = if (Build.VERSION.SDK_INT >= 33) {
-        rememberPermissionState(SCHEDULE_EXACT_ALARM)
-    } else null
+    val context = LocalContext.current
 
-    val isAlarmPermissionGranted = alarmPermissionState?.status?.isGranted ?: true
+    // Not sure if it's safe to access service from UI
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    val isAlarmPermissionGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        alarmManager.canScheduleExactAlarms()
+    } else true
 
 
     val notificationPermissionState = if (Build.VERSION.SDK_INT >= 33) {
@@ -97,17 +89,6 @@ fun DateTimePickerField(
             },
             modifier = modifier
                 .fillMaxWidth()
-                .then(
-                    Modifier.pointerInput(dateTime) {
-                        awaitEachGesture {
-                            awaitFirstDown(pass = PointerEventPass.Initial)
-                            val upEvent =
-                                waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                            if (upEvent != null) showDatePicker = true
-                        }
-                    }
-
-                )
         )
         Box(
             modifier = Modifier
@@ -115,21 +96,21 @@ fun DateTimePickerField(
                 .clickable {
                     if (isAlarm) {
                         if (!isAlarmPermissionGranted) return@clickable
-                        if (isNotificationPermissionGranted) {
-                            notificationPermissionState?.launchPermissionRequest()
+                        if (!isNotificationPermissionGranted) {
+                            notificationPermissionState.launchPermissionRequest()
                         }
                     }
-                    showDatePicker = true
-
+                    if (isNotificationPermissionGranted && isAlarmPermissionGranted) {
+                        showDatePicker = true
+                    }
                 }
         )
     }
-    val context = LocalContext.current
+
     val packageName = context.packageName
     if (isAlarm) {
         if (!isAlarmPermissionGranted) {
-            Text("Grant the alarm permission to set a notification")
-            Text("Go to settings and enable the permission", modifier = Modifier.clickable {
+            Text("Go to settings and enable the alarm permission and RESTART the app", modifier = Modifier.clickable {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val intent = Intent(
                         ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
@@ -139,8 +120,8 @@ fun DateTimePickerField(
                 }
             })
         }
-        if (isAlarmPermissionGranted && !isNotificationPermissionGranted) {
-            Text("Grant the notification permission to set a notification to get reminders")
+        else if (!isNotificationPermissionGranted) {
+            Text("Grant the notification permission to set a notification to get reminders.")
         }
     }
 

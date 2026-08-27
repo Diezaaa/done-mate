@@ -138,7 +138,9 @@ class TasksViewModel @Inject constructor(
 
     fun sync() {
         viewModelScope.launch {
-            tasksRepository.sync()
+            _uiState.updateIfSuccess {
+                it.copy(syncingStatus = tasksRepository.sync())
+            }
         }
     }
 

@@ -18,6 +18,7 @@ import com.example.donemate.data.remote.TasksRemoteDataSource
 import com.example.donemate.data.repository.remote.AccountRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import java.io.File
@@ -61,13 +62,8 @@ class OfflineFirstTasksRepository @Inject constructor(
     }
 
     override val tasks: Flow<Result<List<Task>>> = flow {
-        try {
-            tasksLocalDataSource.getNotDeletedTasks().collect { entities ->
-                emit(Result.Success(entities.map { it.asExternalModel() }))
-            }
-        } catch (exception: Exception) {
-            Log.e(TAG, exception.message.orEmpty(), exception)
-            emit(Result.Error("Something went wrong. Please try again."))
+        tasksLocalDataSource.getNotDeletedTasks().collect { entities ->
+            emit(Result.Success(entities.map { it.asExternalModel() }))
         }
     }
 

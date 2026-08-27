@@ -39,10 +39,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.example.donemate.data.model.User
-import com.example.donemate.ui.screens.change_email.ChangeEmailScreen
-import com.example.donemate.ui.screens.change_email.ChangeEmailViewModel
-import com.example.donemate.ui.screens.change_password.ChangePasswordScreen
-import com.example.donemate.ui.screens.change_password.ChangePasswordViewModel
+import com.example.donemate.ui.screens.update_email.UpdateEmailScreen
+import com.example.donemate.ui.screens.update_email.UpdateEmailViewModel
+import com.example.donemate.ui.screens.update_password.UpdatePasswordScreen
+import com.example.donemate.ui.screens.update_password.UpdatePasswordViewModel
 import com.example.donemate.ui.screens.inspiration.InspirationScreen
 import com.example.donemate.ui.screens.inspiration.InspirationViewModel
 import com.example.donemate.ui.screens.link_email.LinkEmailScreen
@@ -63,22 +63,33 @@ import com.example.donemate.ui.screens.tasks.TasksViewModel
 import com.example.donemate.ui.screens.task.TaskScreen
 import com.example.donemate.ui.screens.task.TaskViewModel
 import com.example.donemate.ui.screens.verify_email.VerifyEmailViewModel
-import com.google.firebase.auth.EmailAuthProvider
 import kotlin.collections.contains
 import kotlin.collections.removeLastOrNull
 
 @Serializable
 data object SignUp : NavKey
 
+// Learn more about @Serializable
+@Serializable
+enum class VerifyEmailPreviousEntry {
+    SIGN_IN,
+    SIGN_UP,
+    LINK_EMAIL,
+    UPDATE_EMAIL,
+}
+
 @Serializable
 data object SignIn : NavKey
 
 
 @Serializable
-data class VerifyEmail(val emailToVerify: String? = null) : NavKey
+data class VerifyEmail(
+    val emailToVerify: String,
+    val previousEntry: VerifyEmailPreviousEntry
+) : NavKey
 
 @Serializable
-data object ChangePassword : NavKey
+data object UpdatePassword : NavKey
 
 @Serializable
 data object Tasks : TopLevelRoute() {
@@ -112,7 +123,7 @@ data class Permission(val taskTitle: String) : NavKey
 data class Preview(val taskTitle: String) : NavKey
 
 @Serializable
-data object ChangeEmail : NavKey
+data object UpdateEmail : NavKey
 
 @Serializable
 data object Inspiration : TopLevelRoute() {
@@ -122,29 +133,37 @@ data object Inspiration : TopLevelRoute() {
 
 private val TOP_LEVEL_ROUTES: List<TopLevelRoute> = listOf(Tasks, Inspiration, Settings)
 
-// Move from list to a class extended with NavKey
-val ALLOWED_WHEN_UNVERIFIED_USER: List<NavKey> =
-    listOf(SignUp, SignIn, LinkEmail, ChangeEmail, VerifyEmail())
-
 @Composable
 fun DoneMateApp(
-    user: User?,
+    userProfile: User?,
+    isUserVerified: Boolean?,
     onOfflineDialogDismiss: () -> Unit,
     offlineDialogShownOnce: Boolean,
 ) {
     var sessionCapturedUri by rememberSaveable { mutableStateOf<String?>(null) }
-    val backStack = rememberNavBackStack(if (user != null) Tasks else SignUp)
+    val backStack = rememberNavBackStack(
+        when (isUserVerified) {
+            true -> Tasks
+            false -> {
+                userProfile?.email.let {
+                    if (it == null) SignIn
+                    else {
+                        VerifyEmail(
+                            emailToVerify = it,
+                            previousEntry = VerifyEmailPreviousEntry.SIGN_IN
+                        )
+                    }
+                }
+            }
+
+            else -> {
+                SignUp
+            }
+        }
+    )
     val currentDestination = backStack.lastOrNull()
     val showBottomBar = currentDestination in TOP_LEVEL_ROUTES
     val snackBarHostState = remember { SnackbarHostState() }
-
-
-    LaunchedEffect(user) {
-
-        if (user != null && !user.isVerified && user.authProviders.contains(EmailAuthProvider.PROVIDER_ID)) {
-            deleteAllEmailUnrelatedScreenAndNavigateToVerifyEmail(backStack, user.email ?: null)
-        }
-    }
 
     LaunchedEffect(currentDestination) {
         if (currentDestination == null) return@LaunchedEffect
@@ -204,14 +223,20 @@ fun DoneMateApp(
                     val viewModel = hiltViewModel<SignInViewModel>()
                     SignInScreen(
                         vm = viewModel,
-                        navigateToResetPassword = {
+                        onNavigateToResetPassword = {
                             backStack.add(ResetPassword)
                         },
-                        navigateToSignUp = {
+                        onNavigateToSignUp = {
                             backStack.add(SignUp)
                         },
-                        navigateToTasks = {
-                            backStack.add(Tasks)
+                        onNavigateToTasks = {
+                            setEntryAsRoot(backStack, Tasks)
+                        },
+                        onNavigateToVerifyEmail = {
+                            deleteEntriesExceptVerifyEmail(
+                                backStack,
+                                VerifyEmailPreviousEntry.SIGN_IN, it
+                            )
                         },
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
@@ -221,10 +246,16 @@ fun DoneMateApp(
                 entry<SignUp> {
                     val viewModel = hiltViewModel<SignUpViewModel>()
                     SignUpScreen(
-                        navigateToSignIn = { backStack.add(SignIn) },
+                        onNavigateToSignIn = { backStack.add(SignIn) },
                         vm = viewModel,
-                        navigateToTasks = {
-                            backStack.add(Tasks)
+                        onNavigateToTasks = {
+                            setEntryAsRoot(backStack, Tasks)
+                        },
+                        onNavigateToVerifyEmail = {
+                            deleteEntriesExceptVerifyEmail(
+                                backStack,
+                                VerifyEmailPreviousEntry.SIGN_UP, it
+                            )
                         },
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
@@ -234,14 +265,14 @@ fun DoneMateApp(
                 entry<Tasks> {
                     val viewModel = hiltViewModel<TasksViewModel>()
                     TasksScreen(
-                        navigateToAdd = {
+                        onNavigateToAdd = {
                             backStack.add(
                                 Task(
                                     id = null
                                 )
                             )
                         },
-                        navigateToEdit = { id ->
+                        onNavigateToEdit = { id ->
                             backStack.add(
                                 Task(
                                     id = id
@@ -256,13 +287,13 @@ fun DoneMateApp(
                 entry<Task> { key ->
                     val vm = hiltViewModel<TaskViewModel>()
                     TaskScreen(
-                        navigateToTasks = {
+                        onNavigateToTasks = {
                             backStack.removeLastOrNull()
                         },
-                        navigateToPermission = { taskTitle ->
+                        onNavigateToPermission = { taskTitle ->
                             backStack.add(Permission(taskTitle))
                         },
-                        navigateToPreview = { taskTitle ->
+                        onNavigateToPreview = { taskTitle ->
                             backStack.add(Preview(taskTitle))
                         },
                         id = key.id,
@@ -272,49 +303,62 @@ fun DoneMateApp(
                 }
                 entry<Settings> {
                     val vm = hiltViewModel<SettingsViewModel>()
+
                     SettingsScreen(
-                        navigateToLinkEmail = {
+                        onNavigateToLinkEmail = {
                             backStack.add(LinkEmail)
                         },
-                        navigateToChangePassword = {
-                            backStack.add(ChangePassword)
+                        onNavigateToUpdatePassword = {
+                            backStack.add(UpdatePassword)
                         },
-                        navigateToChangeEmail = {
-                            backStack.add(ChangeEmail)
+                        onNavigateToUpdateEmail = {
+                            backStack.add(UpdateEmail)
                         },
                         vm = vm,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
                         },
-                        navigateToSignUp = {
+                        onNavigateToSignUp = {
                             setEntryAsRoot(backStack, SignUp)
                         }
                     )
                 }
                 entry<LinkEmail> {
                     val vm = hiltViewModel<LinkEmailViewModel>()
+
                     LinkEmailScreen(
-                        navigateToTasks = {
-                            backStack.add(Tasks)
+                        vm = vm,
+                        onShowSnackbar = { message: String ->
+                            snackBarHostState.showSnackbar(message)
                         },
+                        onNavigateToVerifyEmail = {
+                            deleteEntriesExceptVerifyEmail(
+                                backStack,
+                                VerifyEmailPreviousEntry.LINK_EMAIL, it
+                            )
+                        }
+                    )
+                }
+                entry<ResetPassword> {
+                    val vm = hiltViewModel<ResetPasswordViewModel>()
+
+                    ResetPasswordScreen(
                         vm = vm,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
                         }
                     )
                 }
-                entry<ResetPassword> {
-                    val vm = hiltViewModel<ResetPasswordViewModel>()
-                    ResetPasswordScreen(
-                        vm = vm
-                    )
-                }
-                entry<ChangePassword> {
-                    val vm = hiltViewModel<ChangePasswordViewModel>()
-                    ChangePasswordScreen(
+                entry<UpdatePassword> {
+                    val vm = hiltViewModel<UpdatePasswordViewModel>()
+
+                    UpdatePasswordScreen(
                         vm = vm,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
+                        },
+                        onNavigateToSettings = {
+                            backStack.removeLastOrNull()
                         }
                     )
                 }
@@ -322,6 +366,7 @@ fun DoneMateApp(
                     PermissionScreen(
                         onNavigateToPreview = {
                             backStack.add(Preview(key.taskTitle))
+                            backStack.removeAt(backStack.size - 2)
                         }
                     )
                 }
@@ -339,15 +384,18 @@ fun DoneMateApp(
                     val vm = hiltViewModel<InspirationViewModel>()
                     InspirationScreen(vm = vm)
                 }
-                entry<ChangeEmail> {
-                    val vm = hiltViewModel<ChangeEmailViewModel>()
-                    ChangeEmailScreen(
+                entry<UpdateEmail> {
+                    val vm = hiltViewModel<UpdateEmailViewModel>()
+                    UpdateEmailScreen(
                         vm = vm,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
                         },
-                        navigateToVerifyEmail = {
-                            backStack.add(VerifyEmail(it))
+                        onNavigateToVerifyEmail = {
+                            deleteEntriesExceptVerifyEmail(
+                                backStack,
+                                VerifyEmailPreviousEntry.UPDATE_EMAIL, it
+                            )
                         }
                     )
                 }
@@ -355,17 +403,23 @@ fun DoneMateApp(
                     val vm = hiltViewModel<VerifyEmailViewModel>()
                     VerifyEmailScreen(
                         vm = vm,
-                        onNavigateAfterVerification = {
+                        onNavigateToTasks = {
                             backStack.add(Tasks)
                         },
                         onNavigateBack = {
-                            if (backStack.size > 1) backStack.removeLastOrNull()
-                        },
+                            val previousEntry = when (key.previousEntry) {
+                                VerifyEmailPreviousEntry.SIGN_IN -> SignIn
+                                VerifyEmailPreviousEntry.SIGN_UP -> SignUp
+                                VerifyEmailPreviousEntry.LINK_EMAIL -> LinkEmail
+                                VerifyEmailPreviousEntry.UPDATE_EMAIL -> UpdateEmail
+                            }
+                            backStack.add(previousEntry)
+                            while (backStack.size > 1) backStack.removeFirstOrNull()
+                         },
                         emailToVerify = key.emailToVerify,
                         onNavigateToSignUp = {
-                            setEntryAsRoot(backStack, SignUp)
-                        },
-                        shouldDisplayBackButton = backStack.size > 1
+                            backStack.add(SignUp)
+                        }
                     )
                 }
             }
@@ -381,18 +435,14 @@ fun setEntryAsRoot(backStack: NavBackStack<NavKey>, entry: NavKey) {
     backStack.removeFirstOrNull()
 }
 
-fun deleteAllEmailUnrelatedScreenAndNavigateToVerifyEmail(
+fun deleteEntriesExceptVerifyEmail(
     backStack: NavBackStack<NavKey>,
-    email: String?
+    previousEntry: VerifyEmailPreviousEntry,
+    email: String
 ) {
-    while (backStack.size > 1 && backStack.firstOrNull() !in ALLOWED_WHEN_UNVERIFIED_USER) {
-        backStack.removeFirstOrNull()
-    }
-
+    while (backStack.size > 1) backStack.removeFirstOrNull()
     if (backStack.lastOrNull() !is VerifyEmail) {
-        backStack.add(VerifyEmail(email))
+        backStack.add(VerifyEmail(email, previousEntry))
     }
-    if (backStack.firstOrNull() !in ALLOWED_WHEN_UNVERIFIED_USER) {
-        backStack.removeFirstOrNull()
-    }
+    backStack.removeFirstOrNull()
 }

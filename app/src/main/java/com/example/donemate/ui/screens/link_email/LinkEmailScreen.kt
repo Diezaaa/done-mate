@@ -22,17 +22,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun LinkEmailScreen(
-    navigateToTasks: () -> Unit,
     vm: LinkEmailViewModel,
-    onShowSnackbar: suspend (String) -> SnackbarResult
+    onShowSnackbar: suspend (String) -> SnackbarResult,
+    onNavigateToVerifyEmail: (String) -> Unit
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
 
-    LaunchedEffect(uiState.isFailure) {
-        if (uiState.isFailure == true) {
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess == false) {
             onShowSnackbar("Something went wrong")
             vm.errorMessageShown()
+        }
+    }
+
+    LaunchedEffect(uiState.isSuccess) {
+        uiState.isSuccess?.let {
+            if (it) {
+                onNavigateToVerifyEmail(uiState.email)
+            }
         }
     }
 

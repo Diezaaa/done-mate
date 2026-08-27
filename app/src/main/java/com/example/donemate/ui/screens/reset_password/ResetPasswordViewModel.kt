@@ -3,6 +3,7 @@ package com.example.donemate.ui.screens.reset_password
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.donemate.data.repository.remote.AccountRepository
+import com.example.donemate.data.repository.remote.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,19 +17,32 @@ class ResetPasswordViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ResetPasswordUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun updateEmail(email: String){
+    fun updateEmail(email: String) {
         _uiState.value = _uiState.value.copy(email = email)
     }
 
-    fun sendPasswordResetEmail(){
+    fun sendPasswordResetEmail() {
         viewModelScope.launch {
-           accountRepository.sendPasswordResetEmail(_uiState.value.email)
-            _uiState.value = _uiState.value.copy(isSent = true)
+            when (val result = accountRepository.sendPasswordResetEmail(_uiState.value.email)) {
+                is AuthResult.Success -> {
+                    _uiState.value = _uiState.value.copy(isSent = true)
+                }
+                is AuthResult.Error -> {
+                    _uiState.value = _uiState.value.copy(errorMessage = result.message)
+                }
+            }
         }
+    }
+
+    fun errorMessageShown() {
+        _uiState.value = _uiState.value.copy(
+            errorMessage = null
+        )
     }
 }
 
 data class ResetPasswordUiState(
     val email: String = "",
-    val isSent: Boolean = false
+    val isSent: Boolean = false,
+    val errorMessage: String? = null
 )

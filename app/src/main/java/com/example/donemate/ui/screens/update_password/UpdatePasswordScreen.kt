@@ -1,4 +1,4 @@
-package com.example.donemate.ui.screens.change_email
+package com.example.donemate.ui.screens.update_password
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,27 +20,24 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-fun ChangeEmailScreen(
-    vm: ChangeEmailViewModel,
+fun UpdatePasswordScreen(
+    vm: UpdatePasswordViewModel,
     onShowSnackbar: suspend (String) -> SnackbarResult,
-    navigateToVerifyEmail: (String) -> Boolean
+    onNavigateToSettings: () -> Unit
 ) {
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.shouldRedirectToVerification) {
-        if (uiState.shouldRedirectToVerification) {
-            vm.changeShouldRedirectToVerification(false)
-            navigateToVerifyEmail(uiState.email)
-        }
-    }
-    LaunchedEffect(uiState.isFailure) {
-        if (uiState.isFailure == true) {
-            onShowSnackbar(uiState.errorMessage ?: "Something went wrong")
-            vm.errorMessageShown()
-        }
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { onShowSnackbar(it) }
+        vm.errorMessageShown()
     }
 
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess == true) {
+            onNavigateToSettings()
+        }
+    }
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -53,26 +50,33 @@ fun ChangeEmailScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Change Email",
+                "Change Password",
+
                 fontSize = 35.sp
             )
-            Text("You'll be signed out of your current account after verification")
             TextField(
-                value = uiState.email,
-                onValueChange = vm::updateEmail,
-                label = { Text("New email") },
+                value = uiState.currentPassword,
+                onValueChange = vm::updateCurrentPassword,
+                label = { Text("Current password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            TextField(
+                value = uiState.newPassword,
+                onValueChange = vm::updateNewPassword,
+                label = { Text("New password") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
             Button(
                 onClick = {
-                    vm.changeEmail()
+                    vm.updatePassword()
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Change email")
+                Text("Change password")
             }
         }
+
     }
 }
-

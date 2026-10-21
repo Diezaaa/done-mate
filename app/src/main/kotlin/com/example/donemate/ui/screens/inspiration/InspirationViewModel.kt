@@ -18,25 +18,25 @@ import com.example.donemate.data.repository.local.RemoteKeyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import com.example.donemate.data.common.Result
+import com.example.donemate.network.NetworkMonitor
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import kotlin.collections.emptyList
 
 @HiltViewModel
 class InspirationViewModel @Inject constructor(
     private val quotesRepository: QuotesRepository,
     private val remoteKeyRepository: RemoteKeyRepository,
+    networkMonitor: NetworkMonitor
 ) : ViewModel() {
-
-    // TODO: URGENT. I should make one uiState that exposes all the things that the screen needs
+    // The UI needs PagingData as flow in order to consume pages, so I didn't merge this variable into uiState using combine function
     @OptIn(ExperimentalPagingApi::class)
     val pagingData = Pager(
         config = PagingConfig(
             pageSize = 20,
             initialLoadSize = 20,
-            prefetchDistance = 0
+            prefetchDistance = 20,
         ),
         remoteMediator = InspirationRemoteMediator(
             quotesRepository = quotesRepository,
@@ -52,23 +52,61 @@ class InspirationViewModel @Inject constructor(
         .cachedIn(viewModelScope)
 
 
-
-    val likedQuotes: StateFlow<List<Quote>> = quotesRepository.likedQuotes
-        .map { result ->
+    private val likedQuotesState: StateFlow<LikedQuotesState> = quotesRepository.likedQuotes
+        .map { result: Result<List<Quote>> ->
             if (result is Result.Success) {
-                result.data
+                LikedQuotesState.Success(result.data)
             } else {
-                emptyList()
+                LikedQuotesState.Error("Something went wrong.")
             }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
+            initialValue = LikedQuotesState.Loading
+        )
+
+    val isOnline = networkMonitor.isOnline
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
         )
 
     private val _shouldShowLikedQuotes: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    val shouldShowLikedQuotes: StateFlow<Boolean> = _shouldShowLikedQuotes.asStateFlow()
+    private val syncedOnce = MutableStateFlow(false)
+
+    fun markSyncedOnceAsTrue() {
+        syncedOnce.value = true
+    }
+
+    val likedQuotesUiState: StateFlow<LikedQuotesUiState> =
+        combine(
+            likedQuotesState,
+            _shouldShowLikedQuotes,
+            syncedOnce
+        ) { likedQuotesState, shouldShowLikedQuotes, syncedOnce ->
+            if (!syncedOnce && likedQuotesState is LikedQuotesState.Success && likedQuotesState.likedQuotes.isEmpty()) {
+                LikedQuotesUiState(
+                    likedQuotesState = LikedQuotesState.Loading,
+                    shouldShowLikedQuotes = shouldShowLikedQuotes
+                )
+            } else {
+                LikedQuotesUiState(
+                    likedQuotesState = likedQuotesState,
+                    shouldShowLikedQuotes = shouldShowLikedQuotes
+                )
+            }
+        }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = LikedQuotesUiState(
+                    shouldShowLikedQuotes = false,
+                    likedQuotesState = LikedQuotesState.Loading
+                )
+            )
+
 
     fun markAsLiked(id: String) {
         viewModelScope.launch {
@@ -76,13 +114,13 @@ class InspirationViewModel @Inject constructor(
         }
     }
 
-    fun unlike(id: String){
+    fun unlike(id: String) {
         viewModelScope.launch {
-            quotesRepository.unlike(id)
+            quotesRepository.markAsUnliked(id)
         }
     }
 
-    fun showLikedQuotes () {
+    fun showLikedQuotes() {
         _shouldShowLikedQuotes.value = true
     }
 
@@ -93,6 +131,18 @@ class InspirationViewModel @Inject constructor(
     fun sync() {
         viewModelScope.launch {
             quotesRepository.sync()
+            syncedOnce.value = true
         }
     }
+}
+
+data class LikedQuotesUiState(
+    val likedQuotesState: LikedQuotesState = LikedQuotesState.Loading,
+    val shouldShowLikedQuotes: Boolean = false
+)
+
+sealed interface LikedQuotesState {
+    data object Loading : LikedQuotesState
+    data class Success(val likedQuotes: List<Quote>) : LikedQuotesState
+    data class Error(val message: String) : LikedQuotesState
 }

@@ -20,28 +20,28 @@ import dagger.hilt.components.SingletonComponent
 abstract class RepositoryModule {
 
     @Binds
-    abstract fun bindTasksRepository(
+    abstract fun bindsTasksRepository(
         offlineFirstTasksRepository: OfflineFirstTasksRepository
     ): TasksRepository
 
     @Binds
-    abstract fun bindQuotesRepository(
+    abstract fun bindsQuotesRepository(
         offlineFirstQuotesRepository: OfflineFirstQuotesRepository
     ): QuotesRepository
 
 
     @Binds
-    abstract fun bindPreferencesRepository(
+    abstract fun bindsPreferencesRepository(
         defaultPreferencesRepository: DefaultPreferencesRepository
     ): PreferencesRepository
 
     @Binds
-    abstract fun bindAccountRepository(
+    abstract fun bindsAccountRepository(
         defaultAccountRepository: DefaultAccountRepository
     ): AccountRepository
 
     @Binds
-    abstract fun bindRemoteKeyRepository(
-        defaultRemoteKeyDataSource: DefaultRemoteKeyRepository
+    abstract fun bindsRemoteKeyRepository(
+        defaultRemoteKeyRepository: DefaultRemoteKeyRepository
     ): RemoteKeyRepository
 }

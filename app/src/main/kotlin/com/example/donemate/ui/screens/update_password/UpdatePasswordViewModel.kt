@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.donemate.data.repository.remote.AccountRepository
 import com.example.donemate.data.repository.remote.AuthResult
+import com.example.donemate.ui.common.FormState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,32 +16,33 @@ import javax.inject.Inject
 data class UpdatePasswordUiState(
     val currentPassword: String = "",
     val newPassword: String = "",
-    val errorMessage: String? = null,
-    val isSuccess: Boolean? = null
+    val formState: FormState = FormState.Idle
 )
-
 @HiltViewModel
 class UpdatePasswordViewModel @Inject constructor(
     private val accountRepository: AccountRepository
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(
-        UpdatePasswordUiState()
-    )
+    private val _uiState = MutableStateFlow(UpdatePasswordUiState())
+
+
     val uiState: StateFlow<UpdatePasswordUiState> = _uiState.asStateFlow()
 
     fun updateCurrentPassword(password: String) {
-        _uiState.update { currentState ->
-            currentState.copy(currentPassword = password)
+        _uiState.update {
+            it.copy(currentPassword = password)
         }
     }
 
     fun updateNewPassword(password: String) {
-        _uiState.update { currentState ->
-            currentState.copy(newPassword = password)
+        _uiState.update {
+            it.copy(newPassword = password)
         }
     }
 
     fun updatePassword() {
+        _uiState.update {
+            it.copy(formState = FormState.Submitting)
+        }
         viewModelScope.launch {
             val result = accountRepository.updatePassword(
                 oldPassword = _uiState.value.currentPassword,
@@ -48,17 +50,17 @@ class UpdatePasswordViewModel @Inject constructor(
             )
             when (result) {
                 is AuthResult.Success -> {
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            isSuccess = true
+                    _uiState.update {
+                        it.copy(
+                            formState = FormState.Success
                         )
                     }
                 }
 
                 is AuthResult.Error -> {
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            errorMessage = result.message
+                    _uiState.update {
+                        it.copy(
+                            formState = FormState.Error(result.message)
                         )
                     }
                 }
@@ -67,9 +69,9 @@ class UpdatePasswordViewModel @Inject constructor(
     }
 
     fun errorMessageShown() {
-        _uiState.update { currentState ->
-            currentState.copy(
-                errorMessage = null
+        _uiState.update {
+            it.copy(
+                formState = FormState.Idle
             )
         }
     }

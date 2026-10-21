@@ -32,12 +32,12 @@ fun PermissionScreen(onNavigateToPreview: () -> Unit) {
     )
 
     LaunchedEffect(cameraPermissionState.status.isGranted) {
-        if (cameraPermissionState.status.isGranted){
+        if (cameraPermissionState.status.isGranted) {
             onNavigateToPreview()
         }
     }
 
-    PermissionScreenContent(
+    PermissionScreen(
         isGranted = cameraPermissionState.status.isGranted,
         shouldShowRationale = cameraPermissionState.status.shouldShowRationale,
         onRequestPermission = {
@@ -47,14 +47,14 @@ fun PermissionScreen(onNavigateToPreview: () -> Unit) {
 }
 
 @Composable
-fun PermissionScreenContent(
+fun PermissionScreen(
     isGranted: Boolean,
     shouldShowRationale: Boolean,
     onRequestPermission: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-        , verticalArrangement = Arrangement.Center
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
     ) {
         Icon(
             modifier = Modifier.size(145.dp),
@@ -67,18 +67,18 @@ fun PermissionScreenContent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (isGranted) {
-                Text("Camera permission Granted")
+                Text("Camera permission is granted")
             } else {
                 val textToShow = if (shouldShowRationale) {
-                    "The camera is important for this app. Please grant the permission."
+                    "The camera is important for this app. Please grant the permission in the settings."
                 } else {
-                    "Camera permission required for this feature to be available. Please grant the permission"
+                    "Camera permission required for this feature to be available. Please grant the permission."
                 }
-
                 Text(textToShow)
             }
         }
         Spacer(Modifier.height(20.dp))
+        // TODO: Add redirecting to camera permission setting when rationale is shown
         Button(onClick = onRequestPermission) {
             Text("Grant permission")
         }
@@ -87,18 +87,8 @@ fun PermissionScreenContent(
 
 @Preview(showBackground = true)
 @Composable
-fun PermissionGrantedPreview() {
-    PermissionScreenContent(
-        isGranted = true,
-        shouldShowRationale = false,
-        onRequestPermission = {}
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
 fun PermissionRationalePreview() {
-    PermissionScreenContent(
+    PermissionScreen(
         isGranted = false,
         shouldShowRationale = true,
         onRequestPermission = {}
@@ -107,8 +97,8 @@ fun PermissionRationalePreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun PermissionDeniedPreview() {
-    PermissionScreenContent(
+fun PermissionNotGrantedPreview() {
+    PermissionScreen(
         isGranted = false,
         shouldShowRationale = false,
         onRequestPermission = {}

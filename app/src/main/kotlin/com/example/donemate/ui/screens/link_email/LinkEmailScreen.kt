@@ -22,17 +22,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun LinkEmailScreen(
-    vm: LinkEmailViewModel,
+    viewModel: LinkEmailViewModel,
     onShowSnackbar: suspend (String) -> SnackbarResult,
     onNavigateToVerifyEmail: (String) -> Unit
 ) {
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
-
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess == false) {
             onShowSnackbar("Something went wrong")
-            vm.errorMessageShown()
+            viewModel.errorMessageShown()
         }
     }
 
@@ -61,7 +60,7 @@ fun LinkEmailScreen(
 
             TextField(
                 value = uiState.email,
-                onValueChange = vm::updateEmail,
+                onValueChange = viewModel::updateEmail,
                 label = { Text("E-mail") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -70,7 +69,7 @@ fun LinkEmailScreen(
 
             TextField(
                 value = uiState.password,
-                onValueChange = vm::updatePassword,
+                onValueChange = viewModel::updatePassword,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 label = { Text("Password") }
@@ -78,7 +77,7 @@ fun LinkEmailScreen(
             Spacer(Modifier.height(8.dp))
 
             Button(
-                onClick = { vm.linkEmail() },
+                onClick = { viewModel.linkEmail() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Link")

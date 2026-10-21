@@ -1,7 +1,6 @@
 package com.example.donemate.ui.component
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,22 +27,21 @@ fun TasksDockedSearchBar(
     onDeleteTaskClick: (Task) -> Unit,
     onNavigateToEdit: (String) -> Unit,
     onQueryChange: (String) -> Unit,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
     query: String,
     onArchiveTaskClick: (Task) -> Unit,
-    searchBarModifier: Modifier,
+    onUnarchiveTaskClick: (Task) -> Unit,
+    modifier: Modifier,
     areTasksArchived: Boolean
 ) {
+    val expanded = query.isNotEmpty()
     DockedSearchBar(
-        modifier = searchBarModifier,
+        modifier = modifier,
         expanded = expanded,
         inputField = {
             SearchBarDefaults.InputField(
                 query = query,
                 onQueryChange = {
                     onQueryChange(it)
-                    onExpandedChange(true)
                 },
                 onSearch = {},
                 expanded = expanded,
@@ -56,7 +54,6 @@ fun TasksDockedSearchBar(
                     } else {
                         IconButton(
                             onClick = {
-                                onExpandedChange(false)
                                 onQueryChange("")
                             }
                         ) {
@@ -66,20 +63,12 @@ fun TasksDockedSearchBar(
                 }
             )
         },
-        onExpandedChange = { isExpanded ->
-            onExpandedChange(isExpanded)
+        onExpandedChange = {
 
-            if (!isExpanded) {
-                onQueryChange("")
-            }
         }
     ) {
-        if (query.isNotBlank()) {
+        if (expanded) {
             LazyColumn {
-                item {
-                    Box(modifier = Modifier.height(15.dp)) {}
-                }
-
                 items(visibleTasks, key = { it.id }) { task ->
                     Box(
                         modifier = Modifier.padding(9.dp, 9.dp),
@@ -91,13 +80,10 @@ fun TasksDockedSearchBar(
                             onDeleteTaskClick = onDeleteTaskClick,
                             onNavigateToEdit = onNavigateToEdit,
                             onArchiveTaskClick = onArchiveTaskClick,
+                            onUnarchiveTaskClick = onUnarchiveTaskClick,
                             isTaskArchived = areTasksArchived
                         )
                     }
-                }
-
-                item {
-                    Box(modifier = Modifier.height(15.dp)) {}
                 }
             }
         }

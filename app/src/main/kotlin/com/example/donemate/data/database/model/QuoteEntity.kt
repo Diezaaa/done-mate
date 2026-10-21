@@ -9,6 +9,6 @@ data class QuoteEntity(
     val content: String,
     val author: String,
     val isLiked: Boolean,
-    val updatedAt: Long,
+    val updatedAt: Long?,
     val needsSync: Boolean
 )

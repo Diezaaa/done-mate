@@ -3,6 +3,6 @@ package com.example.donemate
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 
-// מפעיל את מנגנון הזרקת התלויות של היישומון.
+// Required setup for dependency injection with Dagger Hilt
 @HiltAndroidApp
 class DoneMateApplication : Application()

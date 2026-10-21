@@ -12,7 +12,7 @@ import dagger.hilt.android.components.ViewModelComponent
 @InstallIn(ViewModelComponent::class)
 object CameraModule {
     @Provides
-    fun provideCameraSystem(
+    fun providesCameraSystem(
         application: Application
     ): CameraSystem {
         return CameraXCameraSystem(application)

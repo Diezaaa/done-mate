@@ -12,7 +12,7 @@ import com.example.donemate.data.database.model.RemoteKeyEntity
  * This DAO is used by Paging 3 to save and read the current remote paging key.
  */
 @Dao
-interface DefaultRemoteKeyLocalDataSource: RemoteKeyLocalDataSource {
+interface DefaultRemoteKeyLocalDataSource : RemoteKeyLocalDataSource {
     @Query("SELECT * FROM remotekeyentity")
     override suspend fun getRemoteKey(): RemoteKeyEntity?
 

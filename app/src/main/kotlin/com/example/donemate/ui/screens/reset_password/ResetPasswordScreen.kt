@@ -21,15 +21,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun ResetPasswordScreen(
-    vm: ResetPasswordViewModel,
+    viewModel: ResetPasswordViewModel,
     onShowSnackbar: suspend (String) -> Unit
 ) {
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState.errorMessage) {
         if (uiState.errorMessage != null) {
             onShowSnackbar("Something went wrong")
-            vm.errorMessageShown()
+            viewModel.errorMessageShown()
         }
     }
 
@@ -50,7 +50,7 @@ fun ResetPasswordScreen(
 
             TextField(
                 value = uiState.email,
-                onValueChange = vm::updateEmail,
+                onValueChange = viewModel::updateEmail,
                 label = { Text("E-mail") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -58,7 +58,7 @@ fun ResetPasswordScreen(
             Spacer(Modifier.height(8.dp))
 
             Button(
-                onClick = { vm.sendPasswordResetEmail() },
+                onClick = { viewModel.sendPasswordResetEmail() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Send code")

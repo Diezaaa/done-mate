@@ -6,38 +6,39 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.tasks.await
 
 class DefaultLikedQuoteRecordsRemoteDataSource @Inject constructor(
-    private val firebaseFirestore: FirebaseFirestore
+    firebaseFirestore: FirebaseFirestore
 ) : LikedQuoteRecordsRemoteDataSource {
+    private val collectionReference = firebaseFirestore.collection("liked_quote_records")
+
     override suspend fun getLikedQuoteRecords(userId: String): List<RemoteLikedQuoteRecord> {
-        val snap = firebaseFirestore.collection("liked_quote_records")
+        val query = collectionReference
             .whereEqualTo("userId", userId)
-            .get()
-            .await()
+
+        val snap = ServerReads.get(query).await()
 
         return snap.toObjects(RemoteLikedQuoteRecord::class.java)
     }
 
-    override suspend fun saveLikedQuoteRecord(
+    override suspend fun save(
         remoteLikedQuoteRecord: RemoteLikedQuoteRecord
     ) {
         val docRef =
-            firebaseFirestore.collection("liked_quote_records").document(remoteLikedQuoteRecord.id)
+            collectionReference.document(remoteLikedQuoteRecord.id)
 
         docRef.set(remoteLikedQuoteRecord)
     }
 
-    override suspend fun updateLikedQuoteRecord(
-        remoteLikedQuoteRecord: RemoteLikedQuoteRecord) {
-        firebaseFirestore.collection("liked_quote_records")
-            .document(remoteLikedQuoteRecord.id)
-            .set(remoteLikedQuoteRecord)
-            .await()
-    }
+    override suspend fun delete(quoteId: String, userId: String) {
+        val quotesWithQuoteIdQuery = collectionReference.whereEqualTo("quoteId", quoteId)
+            .whereEqualTo("userId", userId)
 
-    override suspend fun deleteLikedQuoteRecord(
-        remoteLikedQuoteRecord: RemoteLikedQuoteRecord) {
-        firebaseFirestore.collection("liked_quote_records").document(remoteLikedQuoteRecord.id)
-            .delete()
-            .await()
+        val snap = ServerReads.get(quotesWithQuoteIdQuery).await()
+
+        snap.forEach {
+            it.reference.delete()
+        }
     }
 }
+
+
+

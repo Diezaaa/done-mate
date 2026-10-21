@@ -1,6 +1,5 @@
 package com.example.donemate.ui.component
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -20,6 +19,10 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.donemate.data.model.Progress
@@ -29,18 +32,17 @@ import kotlin.collections.component2
 
 @Composable
 fun FilterSortTasksButtons(
-    expandedSort: Boolean,
     sortingType: SortingType,
     onSortingTypeChange: (SortingType) -> Unit,
-    onExpandedChange: (Boolean) -> Unit,
     onProgressFilterChange: (Int) -> Unit,
     progressFilter: Int
 ) {
     val menuItemData: Map<String, Int> =
         Progress.entries.associate { it.label to it.value }
+    var expanded by remember { mutableStateOf(false) }
     Row {
         OutlinedIconButton(
-            onClick = { onExpandedChange(true) }
+            onClick = { expanded = true }
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Sort,
@@ -50,8 +52,8 @@ fun FilterSortTasksButtons(
         }
 
         DropdownMenu(
-            expanded = expandedSort,
-            onDismissRequest = { onExpandedChange(false) }
+            expanded = expanded,
+            onDismissRequest = { expanded = false}
         ) {
             Text("Sorting by", modifier = Modifier.padding(start = 3.dp))
 
@@ -110,7 +112,6 @@ fun FilterSortTasksButtons(
                     onClick = {
                         if (progressFilter == phase) {
                             onProgressFilterChange(-1)
-
                         } else {
                             onProgressFilterChange(phase)
                         }

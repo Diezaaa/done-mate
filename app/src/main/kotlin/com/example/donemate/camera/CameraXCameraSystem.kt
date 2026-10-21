@@ -1,12 +1,9 @@
 package com.example.donemate.camera
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.net.Uri
 import android.util.Rational
 import android.view.Surface
-import androidx.annotation.OptIn
-import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
@@ -45,9 +42,9 @@ import kotlin.coroutines.resume
 // TODO: Check that this stuff runs not on main thread and doesn't freeze the UI
 class CameraXCameraSystem @Inject constructor(
     private val application: Application
-): CameraSystem {
+) : CameraSystem {
     private var cameraControl: CameraControl? = null
-    private var cameraInfo: CameraInfo?  = null
+    private var cameraInfo: CameraInfo? = null
     private val _surfaceRequest = MutableStateFlow<SurfaceRequest?>(null)
     private var surfaceMeteringPointFactory: SurfaceOrientedMeteringPointFactory? = null
     private val _cameraState = MutableStateFlow(CameraState())
@@ -62,17 +59,19 @@ class CameraXCameraSystem @Inject constructor(
 
     override fun getSurfaceRequest(): StateFlow<SurfaceRequest?> = _surfaceRequest.asStateFlow()
     override fun toggleTorch() {
-        if (cameraInfo?.torchState?.value == TorchState.ON){
+        if (cameraInfo?.torchState?.value == TorchState.ON) {
             cameraControl?.enableTorch(false)
-        }
-        else{
+        } else {
             cameraControl?.enableTorch(true)
         }
     }
 
-    override fun setZOOM(scaleFactor: Float) {
+    override fun setZoom(scaleFactor: Float) {
         val currentZoom = cameraInfo?.zoomState?.value?.zoomRatio
-        val newZoom = (currentZoom?.times(scaleFactor))?.coerceIn(cameraInfo?.zoomState?.getValue()?.minZoomRatio, cameraInfo?.zoomState?.getValue()?.maxZoomRatio)
+        val newZoom = (currentZoom?.times(scaleFactor))?.coerceIn(
+            cameraInfo?.zoomState?.getValue()?.minZoomRatio,
+            cameraInfo?.zoomState?.getValue()?.maxZoomRatio
+        )
         cameraControl?.setZoomRatio(newZoom ?: 1f)
     }
 
@@ -90,7 +89,7 @@ class CameraXCameraSystem @Inject constructor(
         }
     }
 
-    private val viewPort = ViewPort.Builder(Rational(1,1), Surface.ROTATION_0)
+    private val viewPort = ViewPort.Builder(Rational(1, 1), Surface.ROTATION_0)
         .setScaleType(ViewPort.FILL_CENTER)
         .build()
 
@@ -100,8 +99,6 @@ class CameraXCameraSystem @Inject constructor(
         .addUseCase(imageCaptureUseCase)
         .build()
 
-    @SuppressLint("RestrictedApi")
-    @OptIn(ExperimentalCamera2Interop::class)
     override suspend fun startCamera(
         lifecycleOwner: LifecycleOwner
     ) {
@@ -114,13 +111,10 @@ class CameraXCameraSystem @Inject constructor(
         cameraInfo = camera.cameraInfo
 
         cameraInfo?.let { info ->
-            // torchState: LiveData<Int> -> Flow<Int>
             val torchFlow = info.torchState.asFlow().map { it == TorchState.ON }
 
-            // zoomState: LiveData<ZoomState> -> Flow<Float> of zoomRatio
             val zoomFlow = info.zoomState.asFlow().map { it.zoomRatio }
 
-            // combine the two flows and push to _cameraState
             combine(torchFlow, zoomFlow) { torchOn, zoomRatio ->
                 CameraState(torchOn = torchOn, zoomRatio = zoomRatio)
             }.onEach { newState ->
@@ -128,8 +122,9 @@ class CameraXCameraSystem @Inject constructor(
             }.launchIn(lifecycleOwner.lifecycleScope)
         }
     }
-    // Thought: Maybe there's a better way instead of suspendCancellableCoroutine
-    override suspend fun onCapture(): Uri = suspendCancellableCoroutine { cont ->
+
+    // TODO: Maybe there's a better way instead of suspendCancellableCoroutine
+    override suspend fun capture(): Uri = suspendCancellableCoroutine { cont ->
         val file = File(
             application.filesDir,
             "IMG_${UUID.randomUUID()}.jpg"
@@ -154,7 +149,5 @@ class CameraXCameraSystem @Inject constructor(
                 }
             }
         )
-
     }
-
 }

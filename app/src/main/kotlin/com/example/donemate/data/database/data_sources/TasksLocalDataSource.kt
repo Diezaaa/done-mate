@@ -6,9 +6,12 @@ import kotlinx.coroutines.flow.Flow
 interface TasksLocalDataSource {
     suspend fun upsert(taskEntity: TaskEntity)
 
-    suspend fun markAsDeleted(taskId: String)
-
+    suspend fun markAsDeleted(
+        taskId: String,
+        deletedAt: Long
+    )
     suspend fun markAsArchived(id: String, archivedAt: Long)
+    fun getTasks(): Flow<List<TaskEntity>>
 
     suspend fun deleteAll()
     suspend fun markAsUnArchived(id: String, archivedAt: Long)
@@ -19,7 +22,10 @@ interface TasksLocalDataSource {
     suspend fun getTasksNeedingSync(): List<TaskEntity>
 
 
-    suspend fun markUploaded(id: String)
+    suspend fun markAsSyncedIfUnchanged(
+        id: String,
+        expectedUpdatedAt: Long,
+    )
 
     fun getArchivedTasks(): Flow<List<TaskEntity>>
 

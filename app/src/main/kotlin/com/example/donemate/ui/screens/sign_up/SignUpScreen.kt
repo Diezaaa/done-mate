@@ -26,15 +26,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.donemate.ui.common.AuthState
 import com.example.donemate.ui.component.AuthForm
 import com.example.donemate.ui.component.ContinueWithGoogleButton
+import com.example.donemate.ui.component.CustomLoadingIndicator
 import com.example.donemate.ui.component.launchContinueWithGoogleBottomSheet
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun SignUpScreen(
-    vm: SignUpViewModel,
+    viewModel: SignUpViewModel,
     onNavigateToSignIn: () -> Unit,
     onNavigateToTasks: () -> Unit,
     onShowSnackbar: suspend (String) -> SnackbarResult,
@@ -42,27 +44,33 @@ fun SignUpScreen(
 ) {
 
     val context = LocalContext.current
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         delay(2.seconds)
         launchContinueWithGoogleBottomSheet(context) { result ->
-            vm.continueWithGoogle(result)
+            viewModel.continueWithGoogle(result)
         }
     }
 
-    LaunchedEffect(uiState.authForm.errorMessage) {
-        if (uiState.authForm.errorMessage != null) {
-            onShowSnackbar("Something went wrong")
-            vm.errorMessageShown()
-        }
-    }
 
-    LaunchedEffect(uiState.isUserVerified) {
-        if (uiState.isUserVerified == true) {
-            onNavigateToTasks()
-        } else if (uiState.isUserVerified == false){
-            onNavigateToVerifyEmail(uiState.authForm.email)
+    uiState.let { uiState ->
+        LaunchedEffect(uiState.authState) {
+            uiState.authState.let {
+                if (it is AuthState.Error) {
+                    onShowSnackbar(it.message)
+                    viewModel.errorMessageShown()
+                }
+            }
+        }
+
+
+        LaunchedEffect(uiState.authState) {
+            if (uiState.authState is AuthState.Verified) {
+                onNavigateToTasks()
+            } else if (uiState.authState is AuthState.Verify) {
+                onNavigateToVerifyEmail(uiState.email)
+            }
         }
     }
 
@@ -79,55 +87,65 @@ fun SignUpScreen(
             verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Sign Up",
-                fontSize = 35.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            AuthForm(
-                email = uiState.authForm.email,
-                password = uiState.authForm.password,
-                onEmailChange = vm::updateEmail,
-                onPasswordChange = vm::updatePassword,
-            )
-            Button(
-                onClick = {
-                    vm.createUserWithEmailAndPassword()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Sign up")
+            uiState.let { it ->
+                if (it.authState is AuthState.Authenticating) {
+                    CustomLoadingIndicator()
+                } else {
+
+                    Text(
+                        "Sign Up",
+                        fontSize = 35.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AuthForm(
+                        email = it.email,
+                        password = it.password,
+                        onEmailChange = viewModel::updateEmail,
+                        onPasswordChange = viewModel::updatePassword,
+                    )
+                    Button(
+                        onClick = {
+                            viewModel.createUserWithEmailAndPassword()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Sign up")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Text(
+                            text = "or",
+                            modifier = Modifier.padding(horizontal = 24.dp),
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    ContinueWithGoogleButton("Continue with Google") {
+                        viewModel.continueWithGoogle(it)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Already have an account?",
+                        modifier = Modifier.clickable {
+                            onNavigateToSignIn()
+                        })
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    text = "or",
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            ContinueWithGoogleButton("Continue with Google") {
-                vm.continueWithGoogle(it)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Already have an account?",
-                modifier = Modifier.clickable {
-                    onNavigateToSignIn()
-                })
         }
     }
 }
+

@@ -4,7 +4,6 @@ import com.example.donemate.data.remote.model.RemoteLikedQuoteRecord
 
 interface LikedQuoteRecordsRemoteDataSource {
     suspend fun getLikedQuoteRecords(userId: String): List<RemoteLikedQuoteRecord>
-    suspend fun saveLikedQuoteRecord(remoteLikedQuoteRecord: RemoteLikedQuoteRecord)
-    suspend fun updateLikedQuoteRecord(remoteLikedQuoteRecord: RemoteLikedQuoteRecord)
-    suspend fun deleteLikedQuoteRecord(remoteLikedQuoteRecord: RemoteLikedQuoteRecord)
+    suspend fun save(remoteLikedQuoteRecord: RemoteLikedQuoteRecord)
+    suspend fun delete(quoteId: String, userId: String)
 }

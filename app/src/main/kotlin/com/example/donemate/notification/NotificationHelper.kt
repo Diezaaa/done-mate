@@ -18,6 +18,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import java.util.UUID
+import kotlin.time.Clock
 
 @Singleton
 class NotificationHelper @Inject constructor(@ApplicationContext context: Context,
@@ -29,13 +30,9 @@ class NotificationHelper @Inject constructor(@ApplicationContext context: Contex
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    private val reminderChannelName = "reminder"
+    private val reminderChannelName = "reminders"
 
     fun setUpNotificationChannel() {
-        if (Build.VERSION.SDK_INT < 26) {
-            return
-        }
-
         if (notificationManager.getNotificationChannel("reminder") == null) {
             notificationManager.createNotificationChannel(
                 NotificationChannel(
@@ -50,7 +47,6 @@ class NotificationHelper @Inject constructor(@ApplicationContext context: Contex
     }
 
     suspend fun createMessageAndShow(taskId: String){
-
         val taskResult = tasksRepository.getTaskById(taskId)
         if (taskResult is Result.Success) {
 

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="CopyFileContentSettings">
-    <option name="fileCountLimit" value="99" />
-    <option name="headerFormat" value="### File: $FILE_PATH" />
-    <option name="maxFileSizeKB" value="99999" />
-  </component>
-</project>

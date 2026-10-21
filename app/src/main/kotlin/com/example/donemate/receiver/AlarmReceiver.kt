@@ -19,7 +19,6 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.getStringExtra("id")
 
-        Log.d("AlarmReceiver", "Received ID: $id")
         notificationHelper.setUpNotificationChannel()
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
@@ -28,7 +27,6 @@ class AlarmReceiver : BroadcastReceiver() {
                 notificationHelper.createMessageAndShow(id)
             }
             pendingResult.finish()
-
         }
     }
 }

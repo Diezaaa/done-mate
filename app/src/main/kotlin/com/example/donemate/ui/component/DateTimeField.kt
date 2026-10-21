@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
+import androidx.compose.material3.getSelectedDate
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -35,16 +36,18 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import kotlin.time.ExperimentalTime
-import java.time.Instant
-import java.time.LocalTime
-import java.time.ZoneOffset
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.example.donemate.ui.common.formatTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toKotlinLocalDate
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -57,12 +60,12 @@ fun DateTimePickerField(
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
-    var timeInMs by remember { mutableStateOf<Long?>(null) }
+    var date by remember { mutableStateOf<LocalDate?>(null) }
 
     val context = LocalContext.current
     val packageName = context.packageName
 
-    // Not sure if it's safe to access service from UI
+    // TODO: Not sure if it's safe to access a service from UI. Check it
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     var isAlarmPermissionGranted by remember {
         mutableStateOf(
@@ -86,10 +89,7 @@ fun DateTimePickerField(
     Box {
         OutlinedTextField(
             enabled = if (isAlarm) isAlarmPermissionGranted else true,
-            value = dateTime?.let {
-                LocalDateTime.ofInstant(it, ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm"))
-            } ?: "",
+            value = dateTime?.formatTime() ?: "",
             onValueChange = {},
             label = { Text(label) },
             trailingIcon = {
@@ -109,12 +109,12 @@ fun DateTimePickerField(
                     if (isAlarm) {
                         if (!isAlarmPermissionGranted) {
                             navigateToAlarmsAndRemindersSetting(context, packageName)
-                        }
-                        else if (!isNotificationPermissionGranted) {
+                        } else if (!isNotificationPermissionGranted) {
                             notificationPermissionState.launchPermissionRequest()
+                        } else {
+                            showDatePicker = true
                         }
-                    }
-                    if (isNotificationPermissionGranted && isAlarmPermissionGranted) {
+                    } else {
                         showDatePicker = true
                     }
                 }
@@ -144,7 +144,8 @@ fun DateTimePickerField(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    timeInMs = datePickerState.selectedDateMillis
+                    date =
+                        datePickerState.getSelectedDate()?.toKotlinLocalDate() ?: return@TextButton
                     showDatePicker = false
                     showTimePicker = true
                 }) { Text("OK") }
@@ -164,18 +165,19 @@ fun DateTimePickerField(
             onDismissRequest = { showTimePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    timeInMs?.let { dateMillis ->
-                        val localDate = Instant.ofEpochMilli(dateMillis)
-                            .atZone(ZoneOffset.UTC)
-                            .toLocalDate()
+                    date?.let { date ->
+                        val time = LocalDateTime(
+                            date.year,
+                            date.month.number,
+                            date.day,
+                            timePickerState.hour,
+                            timePickerState.minute
+                        ).toInstant(TimeZone.currentSystemDefault())
+                            .toEpochMilliseconds()
 
-                        val localTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
-
-                        val localDateTime = LocalDateTime.of(localDate, localTime)
-
-                        val finalInstant = localDateTime.atZone(ZoneId.systemDefault()).toInstant()
-
-                        onDateTimeChange(finalInstant.toEpochMilli())
+                        onDateTimeChange(
+                            time
+                        )
                     }
                     showTimePicker = false
                 }) { Text("OK") }

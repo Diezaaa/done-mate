@@ -11,9 +11,9 @@ interface CameraSystem {
     suspend fun startCamera(lifecycleOwner: LifecycleOwner)
     fun getSurfaceRequest(): StateFlow<SurfaceRequest?>
     fun toggleTorch()
-    fun setZOOM(scaleFactor: Float)
+    fun setZoom(scaleFactor: Float)
     fun getCurrentCameraState(): StateFlow<CameraState>
 
     fun focus(offset: Offset)
-    suspend fun onCapture(): Uri
+    suspend fun capture(): Uri
 }

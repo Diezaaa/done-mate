@@ -9,6 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CustomErrorIcon(){
-    Icon(imageVector = Icons.Default.Error, contentDescription = null, modifier = Modifier.size(100.dp))
+fun CustomErrorIcon() {
+    Icon(
+        imageVector = Icons.Default.Error,
+        contentDescription = null,
+        modifier = Modifier.size(100.dp)
+    )
 }

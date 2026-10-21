@@ -23,7 +23,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun CameraOrGalleryDialog(onDismissRequest: () -> Unit, onCameraOptionClick: () -> Unit, onGalleryOptionClick: () -> Unit) {
+fun CameraOrGalleryDialog(
+    onDismissRequest: () -> Unit,
+    onCameraOptionClick: () -> Unit,
+    onGalleryOptionClick: () -> Unit
+) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
@@ -32,7 +36,9 @@ fun CameraOrGalleryDialog(onDismissRequest: () -> Unit, onCameraOptionClick: () 
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.Center
             ) {
                 Button(onClick = { onCameraOptionClick() }, modifier = Modifier.fillMaxWidth()) {
@@ -42,7 +48,7 @@ fun CameraOrGalleryDialog(onDismissRequest: () -> Unit, onCameraOptionClick: () 
                     ) {
                         Icon(
                             imageVector = Icons.Default.Camera,
-                            contentDescription = "Camera",
+                            contentDescription = null,
                             modifier = Modifier.align(Alignment.CenterStart)
                         )
 
@@ -56,7 +62,7 @@ fun CameraOrGalleryDialog(onDismissRequest: () -> Unit, onCameraOptionClick: () 
                     ) {
                         Icon(
                             imageVector = Icons.Default.Photo,
-                            contentDescription = "Camera",
+                            contentDescription = null,
                             modifier = Modifier.align(Alignment.CenterStart)
                         )
 
@@ -70,6 +76,6 @@ fun CameraOrGalleryDialog(onDismissRequest: () -> Unit, onCameraOptionClick: () 
 
 @Composable
 @Preview(showBackground = true)
-fun CameraOrGalleryDialogPreview(){
+fun CameraOrGalleryDialogPreview() {
     CameraOrGalleryDialog({}, {}, {})
 }

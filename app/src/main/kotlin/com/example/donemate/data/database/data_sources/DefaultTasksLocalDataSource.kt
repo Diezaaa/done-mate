@@ -2,9 +2,7 @@ package com.example.donemate.data.database.data_sources
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Update
 import androidx.room.Upsert
 import com.example.donemate.data.database.model.TaskEntity
 import kotlinx.coroutines.flow.Flow
@@ -26,11 +24,15 @@ interface DefaultTasksLocalDataSource : TasksLocalDataSource {
         """
     UPDATE TaskEntity
     SET isDeleted = 1,
-     needsSync = 1
+     needsSync = 1,
+     updatedAt = :deletedAt
     WHERE id = :taskId
     """
     )
-    override suspend fun markAsDeleted(taskId: String)
+    override suspend fun markAsDeleted(
+        taskId: String,
+        deletedAt: Long
+    )
 
 
     @Query(
@@ -40,6 +42,14 @@ interface DefaultTasksLocalDataSource : TasksLocalDataSource {
     )
     override suspend fun deleteAll()
 
+    @Query(
+        """
+    SELECT * 
+    FROM TaskEntity
+    WHERE isDeleted = 0
+    """
+    )
+    override fun getTasks(): Flow<List<TaskEntity>>
 
     @Query(
         """
@@ -64,9 +74,13 @@ interface DefaultTasksLocalDataSource : TasksLocalDataSource {
         UPDATE TaskEntity
         SET needsSync = 0
         WHERE id = :id
+          AND updatedAt = :expectedUpdatedAt
     """
     )
-    override suspend fun markUploaded(id: String)
+    override suspend fun markAsSyncedIfUnchanged(
+        id: String,
+        expectedUpdatedAt: Long,
+    )
 
     @Query(
         """

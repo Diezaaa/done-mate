@@ -1,6 +1,5 @@
 package com.example.donemate.data.repository.local
 
-import com.example.donemate.data.common.Result
 import com.example.donemate.data.common.safeCall
 import com.example.donemate.data.database.data_sources.RemoteKeyLocalDataSource
 import com.example.donemate.data.database.model.RemoteKeyEntity
@@ -11,7 +10,7 @@ private const val TAG = "DefaultRemoteKeyRepository"
 class DefaultRemoteKeyRepository @Inject constructor(
     private val remoteKeyLocalDataSource: RemoteKeyLocalDataSource
 ) : RemoteKeyRepository {
-    override suspend fun getRemoteKey(): Result<RemoteKeyEntity?> =
+    override suspend fun getRemoteKey() =
         safeCall("getRemoteKey", TAG) {
             remoteKeyLocalDataSource.getRemoteKey()
         }

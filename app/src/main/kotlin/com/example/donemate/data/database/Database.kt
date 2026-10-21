@@ -1,6 +1,6 @@
 package com.example.donemate.data.database
 
-import androidx.room.Database;
+import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.donemate.data.database.data_sources.DefaultTasksLocalDataSource
@@ -16,7 +16,6 @@ import javax.inject.Singleton
  * Room is a persistence library that provides an abstraction layer over SQLite.
  * It lets the app store structured data locally using entities, DAOs, and a database class.
  */
-// יישנו הסבר על הספריה גם בתיק פרויקט
 @Singleton
 @Database(entities = [TaskEntity::class,
     QuoteEntity::class,

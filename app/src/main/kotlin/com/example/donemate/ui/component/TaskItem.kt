@@ -41,9 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.donemate.data.model.Progress
 import com.example.donemate.data.model.Task
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.example.donemate.ui.common.formatTime
 
 @Composable
 fun TaskItem(
@@ -52,14 +50,16 @@ fun TaskItem(
     onDeleteTaskClick: (Task) -> Unit,
     onNavigateToEdit: (id: String) -> Unit,
     onArchiveTaskClick: (Task) -> Unit,
+    onUnarchiveTaskClick: (Task) -> Unit,
     isTaskArchived: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
     val menuItemData: Map<String, Int> = Progress.entries.associate { it.label to it.value }
 
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onNavigateToEdit(task.id) }) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToEdit(task.id) }) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -69,15 +69,16 @@ fun TaskItem(
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-
                 task.imageUri?.let { imageUri ->
                     TaskImage(imageUri)
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.padding(16.dp)) {
-                Spacer(modifier = Modifier.width(5.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,7 +100,7 @@ fun TaskItem(
                                 )
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                                 .fillMaxHeight(),
-                            contentAlignment = Alignment.BottomStart
+                            contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
@@ -118,8 +119,7 @@ fun TaskItem(
 
                             DropdownMenu(
                                 expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                                modifier = Modifier
+                                onDismissRequest = { expanded = false }
                             ) {
                                 menuItemData.forEach { (label, value) ->
                                     DropdownMenuItem(
@@ -131,20 +131,19 @@ fun TaskItem(
                                     )
                                 }
                             }
-
                         }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    task.description?.let {
-                        Text(
-                            if (task.description.length > 90) {
-                                task.description.take(90) + "..."
-                            } else {
-                                task.description
-                            }, fontSize = 15.5.sp
-                        )
+                    Row {
+                        task.description?.let {
+                            Text(
+                                if (task.description.length > 90) {
+                                    task.description.take(90) + "..."
+                                } else {
+                                    task.description
+                                }, fontSize = 15.5.sp
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -160,17 +159,8 @@ fun TaskItem(
                                     )
                                     Spacer(modifier = Modifier.width(3.dp))
                                     Text(
-                                        text = "Reminder at " + task.reminderDateTime.atZone(ZoneId.systemDefault())
-                                            .let {
-                                                it.format(
-                                                    DateTimeFormatter.ofPattern(
-                                                        when {
-                                                            it.year == LocalDate.now().year -> "dd MMM HH:mm"
-                                                            else -> "dd MMM yyyy HH:mm"
-                                                        }
-                                                    )
-                                                )
-                                            })
+                                        text = "Reminder: " + task.reminderDateTime.formatTime()
+                                    )
                                 }
                             }
                             if (task.dueDateTime != null) {
@@ -183,24 +173,19 @@ fun TaskItem(
                                     )
                                     Spacer(modifier = Modifier.width(3.dp))
                                     Text(
-                                        text = "Due " + task.dueDateTime.atZone(ZoneId.systemDefault())
-                                            .let {
-                                                it.format(
-                                                    DateTimeFormatter.ofPattern(
-                                                        when {
-                                                            it.year == LocalDate.now().year -> "dd MMM HH:mm"
-                                                            else -> "dd MMM yyyy HH:mm"
-                                                        }
-                                                    )
-                                                )
-                                            })
+                                        text = "Due: " + task.dueDateTime.formatTime()
+                                    )
                                 }
                             }
 
                         }
                         Column {
                             Row {
-                                IconButton(onClick = { onArchiveTaskClick(task) }) {
+                                IconButton(onClick = {
+                                    if (isTaskArchived) onUnarchiveTaskClick(task) else onArchiveTaskClick(
+                                        task
+                                    )
+                                }) {
                                     Icon(
                                         imageVector = if (isTaskArchived) Icons.Outlined.Unarchive else Icons.Outlined.Archive,
                                         contentDescription = null,
@@ -216,13 +201,9 @@ fun TaskItem(
                                 }
                             }
                         }
-
                     }
-
                 }
-                Spacer(modifier = Modifier.width(5.dp))
             }
         }
     }
 }
-

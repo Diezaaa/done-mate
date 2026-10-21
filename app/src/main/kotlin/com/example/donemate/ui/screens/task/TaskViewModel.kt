@@ -2,9 +2,7 @@ package com.example.donemate.ui.screens.task
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.donemate.alarm.AlarmScheduler
 import com.example.donemate.data.common.Result
-import com.example.donemate.data.image.ImageStorage
 import com.example.donemate.data.model.Task
 import com.example.donemate.data.repository.offline_first.TasksRepository
 import com.example.donemate.domain.SaveTaskState
@@ -15,8 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Instant
 
 @HiltViewModel
 class TaskViewModel @Inject constructor(
@@ -46,55 +44,44 @@ class TaskViewModel @Inject constructor(
 
 
     fun updateTitle(title: String) {
-        _uiState.updateIfLoaded { loadedState ->
-            loadedState.copy(task = loadedState.task.copy(title = title))
+        _uiState.updateIfLoaded {
+            it.copy(task = it.task.copy(title = title))
         }
     }
 
     fun updateProgress(progress: Int) {
-        _uiState.updateIfLoaded { loadedState ->
-            loadedState.copy(task = loadedState.task.copy(progress = progress))
+        _uiState.updateIfLoaded {
+            it.copy(task = it.task.copy(progress = progress))
         }
     }
 
     fun updateImageUri(imageUri: String) {
-        _uiState.updateIfLoaded { loadedState ->
-            loadedState.copy(task = loadedState.task.copy(imageUri = imageUri))
+        _uiState.updateIfLoaded {
+            it.copy(task = it.task.copy(imageUri = imageUri))
         }
     }
 
     fun updateDescription(description: String) {
-        _uiState.updateIfLoaded { loadedState ->
-            loadedState.copy(task = loadedState.task.copy(description = description))
+        _uiState.updateIfLoaded {
+            it.copy(task = it.task.copy(description = description))
         }
     }
 
     fun saveTask() {
-        validateForm()
-        val currentState = _uiState.value
+        _uiState.value.let {
+            if (it is TaskFormUiState.Loaded) {
+                _uiState.value = TaskFormUiState.Loading
+                viewModelScope.launch {
+                    when (val result = saveTaskUseCase(it.task)) {
+                        is SaveTaskState.Error -> {
+                            _uiState.value = TaskFormUiState.Error(result.message)
+                        }
 
-        if (currentState is TaskFormUiState.Loaded) {
-            _uiState.value = TaskFormUiState.Loading
-            viewModelScope.launch {
-                when (val result = saveTaskUseCase(currentState.task)) {
-                    is SaveTaskState.Error -> {
-                        _uiState.value = TaskFormUiState.Error(result.message)
-                    }
-                    is SaveTaskState.Success -> {
-                        _uiState.value = TaskFormUiState.Saved
+                        is SaveTaskState.Success -> {
+                            _uiState.value = TaskFormUiState.Saved
+                        }
                     }
                 }
-            }
-        }
-    }
-
-
-    fun validateForm() {
-        _uiState.updateIfLoaded { loadedState ->
-            if (loadedState.task.title.isEmpty()) {
-                loadedState.copy(isValidForm = false)
-            } else {
-                loadedState.copy(isValidForm = true)
             }
         }
     }
@@ -102,10 +89,10 @@ class TaskViewModel @Inject constructor(
     fun updateReminderDateTime(millis: Long?) {
         millis ?: return
 
-        _uiState.updateIfLoaded { loadedState ->
-            loadedState.copy(
-                task = loadedState.task.copy(
-                    reminderDateTime = Instant.ofEpochMilli(
+        _uiState.updateIfLoaded {
+            it.copy(
+                task = it.task.copy(
+                    reminderDateTime = Instant.fromEpochMilliseconds(
                         millis
                     )
                 )
@@ -116,15 +103,21 @@ class TaskViewModel @Inject constructor(
     fun updateDueDateTime(millis: Long?) {
         millis ?: return
 
-        _uiState.updateIfLoaded { loadedState ->
-            loadedState.copy(task = loadedState.task.copy(dueDateTime = Instant.ofEpochMilli(millis)))
+        _uiState.updateIfLoaded {
+            it.copy(
+                task = it.task.copy(
+                    dueDateTime = Instant.fromEpochMilliseconds(
+                        millis
+                    )
+                )
+            )
         }
     }
 }
 
 sealed interface TaskFormUiState {
     data object Loading : TaskFormUiState
-    data class Loaded(val task: Task, val isValidForm: Boolean = true) : TaskFormUiState
+    data class Loaded(val task: Task) : TaskFormUiState
     data object Saved : TaskFormUiState
     data class Error(val message: String) : TaskFormUiState
 }

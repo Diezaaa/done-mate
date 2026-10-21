@@ -11,7 +11,7 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 abstract class AlarmModule {
     @Binds
-    abstract fun bindAlarmScheduler(
+    abstract fun bindsAlarmScheduler(
         androidAlarmScheduler: AndroidAlarmScheduler
     ): AlarmScheduler
 }

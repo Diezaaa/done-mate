@@ -35,6 +35,8 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SwipeDown
 import androidx.compose.material.icons.filled.SwipeUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -46,6 +48,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,13 +63,13 @@ import com.example.donemate.ui.component.CustomErrorIcon
 import com.example.donemate.ui.component.CustomLoadingIndicator
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun InspirationScreen(vm: InspirationViewModel) {
-    val pagingItems = vm.pagingData.collectAsLazyPagingItems()
-    val likedQuotes by vm.likedQuotes.collectAsStateWithLifecycle()
-    val shouldShowLikedQuotes by vm.shouldShowLikedQuotes.collectAsStateWithLifecycle()
+fun InspirationScreen(viewModel: InspirationViewModel) {
+    val likedQuotesUiState by viewModel.likedQuotesUiState.collectAsStateWithLifecycle()
+    val pagingItems = viewModel.pagingData.collectAsLazyPagingItems()
+    val isOnline by viewModel.isOnline.collectAsStateWithLifecycle()
 
     val sourceRefresh = pagingItems.loadState.source.refresh
     val sourceAppend = pagingItems.loadState.source.append
@@ -74,145 +77,190 @@ fun InspirationScreen(vm: InspirationViewModel) {
     val mediatorRefresh = pagingItems.loadState.mediator?.refresh
     val mediatorAppend = pagingItems.loadState.mediator?.append
 
-    val isSyncing = mediatorRefresh is LoadState.Loading
 
-    LaunchedEffect(Unit){
-        while(true) {
-            vm.sync()
-            delay(2.seconds)
+    //TODO: This logic should be in the quotes repository because it's not UI logic. Cancel the coroutine with the syncing when there's no internet connection and mark syncedOnce to true. If there's no internet initially mark syncedOnce as true. I think the Job class must be involved.
+    // Learn async programming in more depth and then fix. Inject network monitor to the repository
+    LaunchedEffect(isOnline) {
+        if (isOnline == true) {
+            while (true) {
+                viewModel.sync()
+                delay(3_500.milliseconds)
+            }
+        } else if (isOnline == false){
+            viewModel.markSyncedOnceAsTrue()
         }
     }
 
-    // TODO: Urgent! Check if VerticalPager works good with Paging3.
-    // Add error handling like it was before
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
-            .padding(horizontal = 13.dp).fillMaxWidth()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 13.dp)
     ) {
-        if (isSyncing) {
-            Column (modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+        if (mediatorRefresh is LoadState.Loading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CustomLoadingIndicator()
             }
         } else if (
             sourceRefresh is LoadState.Error ||
             mediatorRefresh is LoadState.Error
         ) {
-            CustomErrorIcon()
-            Text(
-                "Something went wrong. Check internet connection",
-                modifier = Modifier.width(200.dp)
-            )
-            if (sourceRefresh !is LoadState.Error) {
-                Button(onClick = { pagingItems.retry() }) {
-                    Text("Retry")
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CustomErrorIcon()
+                Text(
+                    "Something went wrong. Check internet connection",
+                    modifier = Modifier.width(200.dp)
+                )
+                if (sourceRefresh !is LoadState.Error) {
+                    Button(onClick = { pagingItems.retry() }) {
+                        Text("Retry")
+                    }
                 }
             }
 
         } else {
             var expanded by rememberSaveable { mutableStateOf(false) }
 
-            // Find a better way
-            Box(
-                modifier = Modifier
-                    .width(200.dp)
-                    .padding(top = 20.dp)
-                    .clickable { expanded = true }
-            ) {
+            // TODO: Find a built-in way to show a dropdown menu
+            Box(modifier = Modifier.fillMaxWidth()) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = RoundedCornerShape(15.dp)
-                        )
+                        .width(200.dp)
+                        .padding(top = 20.dp)
+                        .clickable { expanded = true }
+                        .align(Alignment.Center)
                 ) {
-                    Text(
-                        text = if (shouldShowLikedQuotes) "Liked" else "Explore",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Dropdown",
-                        tint = MaterialTheme.colorScheme.primary,
+                    Box(
                         modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                    )
-                }
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(15.dp)
+                            )
+                    ) {
+                        Icon(
+                            imageVector = if (likedQuotesUiState.shouldShowLikedQuotes) Icons.Default.Favorite else Icons.Default.Explore,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .padding(start = 26.dp)
+                                .align(Alignment.CenterStart)
+                        )
+                        Text(
+                            text = if (likedQuotesUiState.shouldShowLikedQuotes) "Liked" else "Explore",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
 
-                // Read about DropdownMenu
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.width(190.dp),
-                ) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                "Liked",
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = null
-                            )
-                        },
-                        onClick = {
-                            vm.showLikedQuotes()
-                            expanded = false
-                        },
-                        enabled = !shouldShowLikedQuotes,
-                    )
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Dropdown",
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 5.dp)
+                        )
+                    }
 
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                "Explore",
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Explore,
-                                contentDescription = null
-                            )
-                        },
-                        onClick = {
-                            vm.showAllQuotes()
-                            expanded = false
-                        },
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        enabled = shouldShowLikedQuotes
-                    )
+                    // Read about DropdownMenu
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.width(200.dp),
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "Liked",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Favorite,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = {
+                                viewModel.showLikedQuotes()
+                                expanded = false
+                            },
+                            enabled = !likedQuotesUiState.shouldShowLikedQuotes,
+                        )
+
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "Explore",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Explore,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = {
+                                viewModel.showAllQuotes()
+                                expanded = false
+                            },
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            enabled = likedQuotesUiState.shouldShowLikedQuotes
+                        )
+                    }
                 }
             }
 
-            // TODO: there's no error or loading state. Add these
-            if (shouldShowLikedQuotes) {
-                val pagerState = rememberPagerState(pageCount = { likedQuotes.size })
-                VerticalPager(
-                    state = pagerState,
-                    pageSize = threePagesPerViewport,
-                    modifier = Modifier.padding(top = 25.dp),
-                    pageSpacing = 10.dp
-                ) { pageIndex ->
-                    val quote = likedQuotes[pageIndex]
-                    QuoteCard(
-                        item = quote,
-                        pageIndex = pageIndex,
-                        pagerState = pagerState,
-                        onLikeClicked = vm::markAsLiked,
-                        onUnlikeClicked = vm::unlike
-                    )
+            if (likedQuotesUiState.shouldShowLikedQuotes) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    likedQuotesUiState.likedQuotesState.let {
+                        when (it) {
+                            is LikedQuotesState.Loading -> {
+                                CustomLoadingIndicator()
+                            }
+
+                            is LikedQuotesState.Error -> {
+                                CustomErrorIcon()
+                                Text("Something went wrong.")
+                            }
+
+                            is LikedQuotesState.Success -> {
+                                val pagerState =
+                                    rememberPagerState(pageCount = { it.likedQuotes.size })
+                                VerticalPager(
+                                    state = pagerState,
+                                    pageSize = threePagesPerViewport,
+                                    modifier = Modifier.padding(top = 25.dp),
+                                    pageSpacing = 10.dp
+                                ) { pageIndex ->
+                                    val quote = it.likedQuotes[pageIndex]
+                                    QuoteCard(
+                                        item = quote,
+                                        pageIndex = pageIndex,
+                                        currentPage = pagerState.currentPage,
+                                        pageCount = pagerState.pageCount,
+                                        onLikeClicked = viewModel::markAsLiked,
+                                        onUnlikeClicked = viewModel::unlike
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
+
             } else {
                 val pagerState = rememberPagerState(pageCount = {
                     if (
@@ -266,9 +314,10 @@ fun InspirationScreen(vm: InspirationViewModel) {
                                 QuoteCard(
                                     item = item,
                                     pageIndex = pageIndex,
-                                    pagerState = pagerState,
-                                    onLikeClicked = vm::markAsLiked,
-                                    onUnlikeClicked = vm::unlike
+                                    currentPage = pagerState.currentPage,
+                                    pageCount = pagerState.pageCount,
+                                    onLikeClicked = viewModel::markAsLiked,
+                                    onUnlikeClicked = viewModel::unlike
                                 )
                             }
                         }
@@ -279,62 +328,14 @@ fun InspirationScreen(vm: InspirationViewModel) {
     }
 }
 
-//            LazyColumn(
-//                modifier = Modifier.fillMaxSize(),
-//                horizontalAlignment = Alignment.CenterHorizontally,
-//                verticalArrangement = Arrangement.Center
-//            ) {
-
-//
-//
-//                if (sourceAppend is LoadState.Loading ||
-//                    mediatorAppend is LoadState.Loading
-//                ) {
-//                    item {
-//                        CustomLoadingIndicator()
-//                    }
-//                }
-//                if (
-//                    sourceRefresh is LoadState.Error ||
-//                    mediatorRefresh is LoadState.Error
-//                ) {
-//                    item {
-//                        CustomErrorIcon()
-//                        Text(
-//                            "Something went wrong. Check internet connection",
-//                            modifier = Modifier.width(200.dp)
-//                        )
-//                        if (sourceRefresh !is LoadState.Error) {
-//                            Button(onClick = { items.retry() }) {
-//                                Text("Retry")
-//                            }
-//                        }
-//                    }
-//                }
-//                if (
-//                    sourceAppend is LoadState.Error ||
-//                    mediatorAppend is LoadState.Error
-//                ) {
-//                    item {
-//                        Text(
-//                            "Something went wrong. Check internet connection",
-//                            modifier = Modifier.width(200.dp)
-//                        )
-//                        Button(onClick = { items.retry() }) {
-//                            Text("Retry")
-//                        }
-//                    }
-//                }
-//            }
-
-
 @Composable
 fun QuoteCard(
     item: Quote,
     pageIndex: Int,
     onLikeClicked: (String) -> Unit,
     onUnlikeClicked: (String) -> Unit,
-    pagerState: androidx.compose.foundation.pager.PagerState
+    pageCount: Int,
+    currentPage: Int
 ) {
     Card(
         modifier = Modifier.fillMaxSize()
@@ -342,7 +343,7 @@ fun QuoteCard(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            if (pageIndex == 1 && pagerState.currentPage == 1) {
+            if (pageIndex == 1 && currentPage == 1) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -439,7 +440,6 @@ fun QuoteCard(
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
-                                // TODO: Add tooltip
                                 IconButton(
                                     onClick = {
                                         if (item.isLiked) {
@@ -468,7 +468,7 @@ fun QuoteCard(
                     }
                 }
             }
-            if (pagerState.currentPage == 0 && pagerState.pageCount > 1) {
+            if (currentPage == 0 && pageCount > 1) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

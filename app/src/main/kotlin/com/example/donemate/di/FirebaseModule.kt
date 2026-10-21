@@ -2,6 +2,8 @@ package com.example.donemate.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestoreSettings
+import com.google.firebase.firestore.memoryCacheSettings
 import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
@@ -15,24 +17,28 @@ object FirebaseModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth {
+    fun providesFirebaseAuth(): FirebaseAuth {
         val auth = FirebaseAuth.getInstance()
-
         return auth
     }
 
     @Provides
     @Singleton
-    fun provideFirebaseFirestore(): FirebaseFirestore {
+    fun providesFirebaseFirestore(): FirebaseFirestore {
         val firestore = FirebaseFirestore.getInstance()
 
+        val firestoreSettings = firestoreSettings {
+            // Use memory cache
+            setLocalCacheSettings(memoryCacheSettings {})
+        }
+        firestore.firestoreSettings = firestoreSettings
 
         return firestore
     }
 
     @Provides
     @Singleton
-    fun provideFirebaseStorage(): FirebaseStorage {
+    fun providesFirebaseStorage(): FirebaseStorage {
         val storage = FirebaseStorage.getInstance()
         return storage
     }

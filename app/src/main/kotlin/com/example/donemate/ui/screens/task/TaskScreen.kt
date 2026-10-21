@@ -57,18 +57,18 @@ import com.google.accompanist.permissions.rememberPermissionState
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun TaskScreen(
-    vm: TaskViewModel,
+    viewModel: TaskViewModel,
     id: String?,
     onNavigateToTasks: () -> Unit,
     onNavigateToPermission: (String) -> Unit,
     onNavigateToPreview: (String) -> Unit,
     cameraImageUri: String?,
 ) {
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         if (id != null) {
-            vm.loadTask(id)
+            viewModel.loadTask(id)
         }
     }
 
@@ -82,16 +82,16 @@ fun TaskScreen(
     TaskScreen(
         uiState = uiState,
         onNavigateToTasks = onNavigateToTasks,
-        onTitleChange = vm::updateTitle,
-        onProgressChange = vm::updateProgress,
-        onSaveClick = vm::saveTask,
-        onReminderDateTimeChange = vm::updateReminderDateTime,
+        onTitleChange = viewModel::updateTitle,
+        onProgressChange = viewModel::updateProgress,
+        onSaveClick = viewModel::saveTask,
+        onReminderDateTimeChange = viewModel::updateReminderDateTime,
         onNavigateToPermission = onNavigateToPermission,
         onNavigateToPreview = onNavigateToPreview,
         cameraImageUri = cameraImageUri,
-        onImageChange = vm::updateImageUri,
-        onDueDateTimeChange = vm::updateDueDateTime,
-        onDescriptionChange = vm::updateDescription
+        onImageChange = viewModel::updateImageUri,
+        onDueDateTimeChange = viewModel::updateDueDateTime,
+        onDescriptionChange = viewModel::updateDescription
     )
 }
 
@@ -132,13 +132,13 @@ fun TaskScreen(
                 onImageChange(uri.toString())
             }
         }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
         contentAlignment = Alignment.Center
     ) {
-
         if (uiState is TaskFormUiState.Error) {
             Text(text = uiState.message)
         }
@@ -167,39 +167,24 @@ fun TaskScreen(
                     Spacer(modifier = Modifier.width(10.dp))
                 }
 
-
                 if (uiState.task.imageUri != null) {
-
                     Box(
                         modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter
                     ) {
-
-                        uiState.task.imageUri?.let { imageUri ->
+                        uiState.task.imageUri.let { imageUri ->
                             TaskImage(imageUri)
                         }
-
                     }
                 }
-
-
-
 
                 Spacer(Modifier.height(15.dp))
                 TextField(
                     value = uiState.task.title,
                     onValueChange = onTitleChange,
                     label = { Text("Title") },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = !uiState.isValidForm,
-                    supportingText = {
-                        if (!uiState.isValidForm) {
-                            Text(
-                                "Title cannot be empty", color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    })
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(Modifier.height(8.dp))
-
                 TextField(
                     value = uiState.task.description ?: "",
                     onValueChange = onDescriptionChange,
@@ -310,7 +295,7 @@ fun TaskScreen(
                         .height(56.5.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Done, contentDescription = "Back"
+                        imageVector = Icons.Default.Done, contentDescription = "Save task"
                     )
                     Spacer(Modifier.width(13.dp))
                     Text(

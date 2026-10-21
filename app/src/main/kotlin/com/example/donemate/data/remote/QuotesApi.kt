@@ -1,5 +1,6 @@
 package com.example.donemate.data.remote
 
+import com.example.donemate.data.remote.model.RemoteQuote
 import com.example.donemate.data.remote.model.RemoteQuotesList
 
 val motivationalOr = listOf(
@@ -16,7 +17,6 @@ val motivationalOr = listOf(
 ).joinToString("|")
 
 interface QuotesApi {
-    // TODO: Add error handling in the impl to expose errors
     suspend fun getQuotes(
         page: Int = 1,
         tags: String = motivationalOr,
@@ -24,4 +24,6 @@ interface QuotesApi {
         sortBy: String = "dateAdded",
         order: String = "asc"
     ): RemoteQuotesList
+
+    suspend fun getQuoteById(id: String): RemoteQuote
 }

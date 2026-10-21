@@ -16,29 +16,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.SignalWifiConnectedNoInternet4
 import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.saveable.rememberSaveable
 import com.example.donemate.data.model.Task
 import kotlinx.coroutines.delay
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.ui.Alignment
-import com.example.donemate.data.common.Result
 import com.example.donemate.ui.common.SortingType
 import com.example.donemate.ui.common.TasksUiState
 import com.example.donemate.ui.component.CustomLoadingIndicator
+import com.example.donemate.ui.component.ErrorMessage
 import com.example.donemate.ui.component.FilterSortTasksButtons
+import com.example.donemate.ui.component.OfflineAlertDialog
 import com.example.donemate.ui.component.TaskItem
 import com.example.donemate.ui.component.TasksDockedSearchBar
 import kotlin.time.Duration.Companion.milliseconds
@@ -46,33 +40,35 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun TasksScreen(
-    vm: TasksViewModel,
+    viewModel: TasksViewModel,
     onNavigateToEdit: (id: String) -> Unit,
     onNavigateToAdd: () -> Unit,
-    isOfflineDialogShownOnce: Boolean,
-    onOfflineDialogDismiss: () -> Unit,
-    onNavigateToArchive: () -> Unit
+    onNavigateToArchive: () -> Unit,
+    wasOfflineDialogShown: Boolean,
+    onOfflineDialogDismiss: () -> Unit
 ) {
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isOnline by viewModel.isOnline.collectAsStateWithLifecycle()
 
     TasksScreen(
         uiState = uiState,
-        onTaskProgressChange = vm::updateTaskProgress,
-        onDeleteTaskClick = vm::deleteTask,
+        onTaskProgressChange = viewModel::updateTaskProgress,
+        isOnline = isOnline,
+        onDeleteTaskClick = viewModel::deleteTask,
         onNavigateToEdit = onNavigateToEdit,
         onNavigateToAdd = onNavigateToAdd,
-        onQueryChange = vm::updateQuery,
-        onProgressFilterChange = vm::updateProgressFilter,
-        onSortingTypeChange = vm::updateSortingType,
-        isOfflineDialogShownOnce = isOfflineDialogShownOnce,
+        onQueryChange = viewModel::updateQuery,
+        onProgressFilterChange = viewModel::updateProgressFilter,
+        onSortingTypeChange = viewModel::updateSortingType,
+        onSync = viewModel::sync,
+        onMarkSyncedOnceAsTrue = viewModel::markSyncedOnceAsTrue,
+        wasOfflineDialogShown = wasOfflineDialogShown,
         onOfflineDialogDismiss = onOfflineDialogDismiss,
-        onSync = vm::sync,
         onNavigateToArchive = onNavigateToArchive,
-        onArchiveTaskClick = vm::archiveTask
+        onArchiveTaskClick = viewModel::archiveTask
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TasksScreen(
     uiState: TasksUiState,
@@ -80,26 +76,38 @@ fun TasksScreen(
     onDeleteTaskClick: (Task) -> Unit,
     onNavigateToEdit: (String) -> Unit,
     onNavigateToAdd: () -> Unit,
+    onMarkSyncedOnceAsTrue: () -> Unit,
     onQueryChange: (String) -> Unit,
     onProgressFilterChange: (Int) -> Unit,
     onSortingTypeChange: (SortingType) -> Unit,
-    isOfflineDialogShownOnce: Boolean,
+    isOnline: Boolean?,
+    wasOfflineDialogShown: Boolean,
     onOfflineDialogDismiss: () -> Unit,
     onSync: () -> Unit,
     onNavigateToArchive: () -> Unit,
     onArchiveTaskClick: (Task) -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        while (true) {
-            onSync()
-            delay(4_500.milliseconds)
+
+    //TODO: This logic should be in the tasks repository because it's not UI logic and this logic is used also in the archive screen. Cancel the coroutine with the syncing when there's no internet connection and mark syncedOnce to true. If there's no internet initially mark syncedOnce as true. I think the Job class must be involved.
+    // Learn async programming in more depth and then fix. Inject network monitor to the repository
+    LaunchedEffect(isOnline) {
+        if (isOnline == true) {
+            while (true) {
+                onSync()
+                delay(3_500.milliseconds)
+            }
+        } else if (isOnline == false){
+            onMarkSyncedOnceAsTrue()
         }
     }
-    var expanded by rememberSaveable { mutableStateOf(false) }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
+        if (!wasOfflineDialogShown && isOnline != true && isOnline != null) {
+            OfflineAlertDialog(onOfflineDialogDismiss = onOfflineDialogDismiss)
+        }
         Column(modifier = Modifier.fillMaxSize()) {
             when (uiState) {
                 is TasksUiState.Loading -> {
@@ -112,54 +120,11 @@ fun TasksScreen(
                 }
 
                 is TasksUiState.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Error,
-                                contentDescription = null,
-                                modifier = Modifier.size(100.dp)
-                            )
-                            Text(text = uiState.message, modifier = Modifier.width(250.dp))
-                        }
-                    }
+                    ErrorMessage(uiState.message)
                 }
 
                 is TasksUiState.Success -> {
-                    if (!isOfflineDialogShownOnce && uiState.syncingStatus is Result.Error) {
-                        AlertDialog(
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Default.SignalWifiConnectedNoInternet4,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(50.dp)
-                                )
-                            },
-                            title = {
-                                Text(text = "You're offline")
-                            },
-                            text = {
-                                Text(text = "Your tasks aren't synced with your other devices while you're offline!")
-                            },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = {
-                                        onOfflineDialogDismiss()
-                                    }
-                                ) {
-                                    Text("OK")
-                                }
-                            },
-                            onDismissRequest = {}
-                        )
-                    }
-
-
+                    val expandedSearchBar = uiState.query != ""
                     Row(modifier = Modifier.fillMaxWidth()) {
                         TasksDockedSearchBar(
                             visibleTasks = uiState.visibleTasks,
@@ -167,16 +132,15 @@ fun TasksScreen(
                             onDeleteTaskClick = onDeleteTaskClick,
                             onNavigateToEdit = onNavigateToEdit,
                             onQueryChange = onQueryChange,
-                            expanded = expanded,
-                            onExpandedChange = { expanded = it },
                             query = uiState.query,
-                            searchBarModifier = Modifier
+                            modifier = Modifier
                                 .weight(1f),
                             onArchiveTaskClick = onArchiveTaskClick,
-                            areTasksArchived = false
+                            areTasksArchived = false,
+                            onUnarchiveTaskClick = {}
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        if (!expanded) {
+                        if (!expandedSearchBar) {
                             FilledTonalIconButton(
                                 onClick = {
                                     onNavigateToArchive()
@@ -194,20 +158,16 @@ fun TasksScreen(
                             }
                         }
                     }
-                    if (!expanded) {
-
+                    if (!expandedSearchBar) {
                         Spacer(modifier = Modifier.height(3.dp))
-
-                        var expandedSort by rememberSaveable { mutableStateOf(false) }
-                        FilterSortTasksButtons(
-                            expandedSort = expandedSort,
-                            sortingType = uiState.sortingType,
-                            onSortingTypeChange = onSortingTypeChange,
-                            onExpandedChange = { expandedSort = it },
-                            onProgressFilterChange = onProgressFilterChange,
-                            progressFilter = uiState.progressFilter
-                        )
-
+                        Row {
+                            FilterSortTasksButtons(
+                                sortingType = uiState.sortingType,
+                                onSortingTypeChange = onSortingTypeChange,
+                                onProgressFilterChange = onProgressFilterChange,
+                                progressFilter = uiState.progressFilter
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(8.5.dp))
 
@@ -228,6 +188,7 @@ fun TasksScreen(
                                         onDeleteTaskClick = onDeleteTaskClick,
                                         onNavigateToEdit = onNavigateToEdit,
                                         onArchiveTaskClick = onArchiveTaskClick,
+                                        onUnarchiveTaskClick = {},
                                         isTaskArchived = false
                                     )
                                 }

@@ -13,6 +13,7 @@ import com.example.donemate.data.repository.local.RemoteKeyRepository
 import com.example.donemate.data.repository.offline_first.QuotesRepository
 
 // TODO: Maybe I should move to Kotlin's result class because it will make the code cleaner (without the when)
+// TODO: Learn more about Paging and make the last quote viewed appear as the first after process death
 @OptIn(ExperimentalPagingApi::class)
 class InspirationRemoteMediator(
     private val quotesRepository: QuotesRepository,
@@ -70,7 +71,7 @@ class InspirationRemoteMediator(
             }
 
             val response = when (
-                val result = quotesRepository.getNetworkQuotesList(
+                val result = quotesRepository.getRemoteQuotesList(
                     page = loadKey
                 )
             ) {
@@ -105,7 +106,7 @@ class InspirationRemoteMediator(
                 }
             }
 
-            when (val result = quotesRepository.insertAll(quotes)) {
+            when (val result = quotesRepository.upsertAll(quotes)) {
                 is Result.Success -> Unit
 
                 is Result.Error -> {

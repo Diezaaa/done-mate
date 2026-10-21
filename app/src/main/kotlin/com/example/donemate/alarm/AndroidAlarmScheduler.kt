@@ -1,6 +1,5 @@
 package com.example.donemate.alarm
 
-import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -10,18 +9,21 @@ import com.example.donemate.receiver.AlarmReceiver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
+import kotlin.time.Clock
 
 @Singleton
-class AndroidAlarmScheduler @Inject constructor(@ApplicationContext private val context: Context): AlarmScheduler  {
-    private val alarmMgr: AlarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+class AndroidAlarmScheduler @Inject constructor(@ApplicationContext private val context: Context) :
+    AlarmScheduler {
+    private val alarmMgr: AlarmManager =
+        context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    @SuppressLint("ScheduleExactAlarm")
     override fun setReminder(time: Long?, id: String) {
         if (time == null) return
-        if (time <= System.currentTimeMillis()) {
+        val currentTime = Clock.System.now().toEpochMilliseconds()
+        cancelReminder(id)
+        if (time <= currentTime) {
             return
         }
-        cancelReminder(id)
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("id", id)
         }

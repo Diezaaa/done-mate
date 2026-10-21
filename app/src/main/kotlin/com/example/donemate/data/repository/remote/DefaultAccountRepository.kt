@@ -28,11 +28,12 @@ sealed class AuthResult {
 
 private const val TAG = "DefaultAccountRepository"
 
-class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAuth) :
+class DefaultAccountRepository @Inject constructor(private val firebaseAuth: FirebaseAuth) :
     AccountRepository {
 
-    override fun getUserId(): String? = auth.currentUser?.uid
+    override fun getUserId(): String? = firebaseAuth.currentUser?.uid
 
+    // TODO: Consider combining isUserVerified into userProfile
     override val userProfile: Flow<User?> =
         firebaseUser().map { firebaseUser ->
             if (firebaseUser == null)
@@ -47,12 +48,12 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
             }
         }
 
-    // NOTE: User is verified when he has verified his email or/and is linked with Google
+    /** User is verified when he has verified his email or/and is linked with Google */
     override val isUserVerified: Flow<Boolean?> =
         userProfile.map { it ->
             if (it == null) return@map null
             else {
-                it.isEmailVerified || auth.currentUser?.providerData?.any {
+                it.isEmailVerified || firebaseAuth.currentUser?.providerData?.any {
                     it.providerId == GoogleAuthProvider.PROVIDER_ID
                 } == true
             }
@@ -66,20 +67,21 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
 
 
     // Learn more about flows and REFACTOR this function
-    fun firebaseUser(): Flow<FirebaseUser?> = channelFlow {
+    private fun firebaseUser(): Flow<FirebaseUser?> = channelFlow {
+        send(firebaseAuth.currentUser)
         while (true) {
             reloadFirebaseUser(this)
             delay(1.seconds)
         }
     }
 
-    // Learn more about flows and REFACTOR this function
+    // TODO: Learn more about flows and REFACTOR this function
     private suspend fun reloadFirebaseUser(scope: ProducerScope<FirebaseUser?>) {
         try {
-            auth.currentUser!!.reload().await()
-            scope.send(auth.currentUser)
+            firebaseAuth.currentUser!!.reload().await()
+            scope.send(firebaseAuth.currentUser)
         } catch (_: Exception) {
-            scope.send(auth.currentUser)
+            scope.send(firebaseAuth.currentUser)
         }
     }
 
@@ -90,13 +92,15 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
         return try {
             val firebaseUser = firebaseUser().first()!!
             val credential =
-                EmailAuthProvider.getCredential(auth.currentUser!!.email!!, oldPassword)
+                EmailAuthProvider.getCredential(firebaseAuth.currentUser!!.email!!, oldPassword)
             firebaseUser.reauthenticate(credential).await()
             firebaseUser.updatePassword(newPassword).await()
+            val newCredential =
+                EmailAuthProvider.getCredential(firebaseAuth.currentUser!!.email!!, newPassword)
+            firebaseUser.reauthenticate(newCredential).await()
             AuthResult.Success
-        } catch (_: FirebaseAuthInvalidCredentialsException) {
-            AuthResult.Error("Your current password is incorrect")
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.d("updatePass", e.toString())
             AuthResult.Error("Something went wrong")
         }
     }
@@ -115,7 +119,7 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
 
     override suspend fun signInWithEmailAndPassword(email: String, password: String): AuthResult {
         return try {
-            auth.signInWithEmailAndPassword(email, password).await()
+            firebaseAuth.signInWithEmailAndPassword(email, password).await()
             AuthResult.Success
         } catch (_: FirebaseAuthInvalidCredentialsException) {
             AuthResult.Error("Invalid email or password")
@@ -132,13 +136,13 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
                 firebaseUser().first()!!.unlink(EmailAuthProvider.PROVIDER_ID).await()
             }
             firebaseUser().first()!!.linkWithCredential(credential).await()
-            auth.signInWithEmailAndPassword(email, password).await()
-            auth.currentUser!!.sendEmailVerification().await()
+            firebaseAuth.signInWithEmailAndPassword(email, password).await()
+            firebaseAuth.currentUser!!.sendEmailVerification().await()
             AuthResult.Success
         } catch (_: FirebaseAuthRecentLoginRequiredException) {
             AuthResult.Error("Re-login and then try again")
         } catch (e: Exception) {
-            auth.currentUser?.unlink(EmailAuthProvider.PROVIDER_ID)
+            firebaseAuth.currentUser?.unlink(EmailAuthProvider.PROVIDER_ID)
             AuthResult.Error("Something went wrong")
         }
     }
@@ -171,7 +175,7 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
 
     override suspend fun signOut(): AuthResult {
         return try {
-            auth.signOut()
+            firebaseAuth.signOut()
             AuthResult.Success
         } catch (e: Exception) {
             AuthResult.Error("Something went wrong")
@@ -180,7 +184,7 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
 
     override suspend fun sendPasswordResetEmail(email: String): AuthResult {
         return try {
-            auth.sendPasswordResetEmail(email).await()
+            firebaseAuth.sendPasswordResetEmail(email).await()
             AuthResult.Success
         } catch (_: Exception) {
             AuthResult.Error("Something went wrong")
@@ -192,7 +196,7 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
         password: String
     ): AuthResult {
         return try {
-            auth.createUserWithEmailAndPassword(email, password).await()
+            firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             firebaseUser().first()!!.sendEmailVerification().await()
             AuthResult.Success
         } catch (_: Exception) {
@@ -204,7 +208,7 @@ class DefaultAccountRepository @Inject constructor(private val auth: FirebaseAut
     override suspend fun continueWithGoogle(idToken: String): AuthResult {
         return try {
             val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-            auth.signInWithCredential(firebaseCredential).await()
+            firebaseAuth.signInWithCredential(firebaseCredential).await()
             AuthResult.Success
         } catch (_: Exception) {
             AuthResult.Error("Something went wrong")

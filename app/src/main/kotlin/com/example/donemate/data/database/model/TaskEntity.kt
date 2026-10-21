@@ -3,8 +3,8 @@ package com.example.donemate.data.database.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.donemate.data.model.Progress
-import java.time.Instant
 import kotlin.String
+import kotlin.time.Instant
 
 @Entity
 data class TaskEntity(
@@ -19,5 +19,5 @@ data class TaskEntity(
     val isDeleted: Boolean = false,
     val needsSync: Boolean,
     val description: String?,
-    val isArchived: Boolean = false
+    val isArchived: Boolean
 )

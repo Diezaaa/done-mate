@@ -50,30 +50,30 @@ import com.google.firebase.auth.GoogleAuthProvider
 
 @Composable
 fun SettingsScreen(
-    vm: SettingsViewModel,
+    viewModel: SettingsViewModel,
     onNavigateToLinkEmail: () -> Unit,
     onNavigateToUpdatePassword: () -> Unit,
     onNavigateToUpdateEmail: () -> Unit,
     onShowSnackbar: suspend (String) -> Unit,
     onNavigateToSignUp: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
     SettingsScreen(
         uiState = uiState,
-        onDeleteAccountClick = vm::deleteAccount,
-        onSignOutClick = vm::signOut,
+        onDeleteAccountClick = viewModel::deleteAccount,
+        onSignOutClick = viewModel::signOut,
         onNavigateToLinkEmail = onNavigateToLinkEmail,
-        onThemeChange = vm::changeTheme,
+        onThemeChange = viewModel::changeTheme,
         onNavigateToUpdatePassword = onNavigateToUpdatePassword,
         onNavigateToUpdateEmail = onNavigateToUpdateEmail,
         onShowSnackbar = onShowSnackbar,
-        onErrorMessageShown = vm::errorMessageShown,
+        onErrorMessageShown = viewModel::errorMessageShown,
         onLinkGoogle = { credential: Credential ->
-            vm.linkGoogle(credential)
+            viewModel.linkGoogle(credential)
         },
         onNavigateToSignUp = onNavigateToSignUp,
-        onUnlinkEmail = vm::unlinkEmail
+        onUnlinkEmail = viewModel::unlinkEmail
     )
 }
 
@@ -102,7 +102,7 @@ fun SettingsScreen(
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is SettingsUiState.Success && uiState.userProfile == null) {
+        if (uiState is SettingsUiState.Success && uiState.shouldRedirectToSignUp) {
             onNavigateToSignUp()
         }
     }
@@ -122,8 +122,6 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text("Account", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                // TODO: When I add profiles I need to change it to "Hello [user]"
-                Text("Hello user,")
                 if ((uiState.userProfile?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID) == true &&
                             uiState.userProfile.authProviders.contains(GoogleAuthProvider.PROVIDER_ID))
                 ) {
@@ -132,7 +130,6 @@ fun SettingsScreen(
                     Text("Email: ${uiState.userProfile.email}${if (!uiState.userProfile.isEmailVerified) " (unverified)" else ""}")
                 } else if (uiState.userProfile?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID) == true) {
                     Text("You are currently signed in with email.\nEmail: ${uiState.userProfile.email}${if (!uiState.userProfile.isEmailVerified) " (Unverified, check mailbox)" else ""}")
-
                 } else if (uiState.userProfile?.authProviders?.contains(GoogleAuthProvider.PROVIDER_ID) == true
                 ) {
                     Text("You are currently signed in with Google.\nGoogle account's email: ${uiState.userProfile.googleEmail}")
@@ -294,8 +291,6 @@ fun SettingsScreen(
                         textAlign = TextAlign.Start
                     )
                 }
-
-
                 HorizontalDivider(thickness = 2.dp)
                 Text("Appearance", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
@@ -337,6 +332,7 @@ fun DeleteAccountDialog(onDismissRequest: () -> Unit, onDeleteAccountClick: () -
             TextButton(
                 onClick = {
                     onDeleteAccountClick()
+                    onDismissRequest()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red,
@@ -367,10 +363,11 @@ fun SettingsScreenWithEmailOnlyAccountPreview() {
             userProfile = User(
                 "abc@abc.abc",
                 true,
-                authProviders = listOf(EmailAuthProvider.PROVIDER_ID),
+                authProviders = listOf(EmailAuthProvider.PROVIDER_ID)
             ),
             isDarkTheme = false,
             errorMessage = null,
+            shouldRedirectToSignUp = false
         ),
         onDeleteAccountClick = {},
         onSignOutClick = {},
@@ -404,6 +401,7 @@ fun SettingsScreenWithEmailAndGoogleAccountPreview() {
             ),
             isDarkTheme = false,
             errorMessage = null,
+            shouldRedirectToSignUp = false
         ),
         onDeleteAccountClick = {},
         onSignOutClick = {},

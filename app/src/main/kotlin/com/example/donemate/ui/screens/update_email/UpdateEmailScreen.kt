@@ -18,29 +18,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.donemate.ui.common.FormState
+import com.example.donemate.ui.component.CustomLoadingIndicator
 
 @Composable
 fun UpdateEmailScreen(
-    vm: UpdateEmailViewModel,
+    viewModel: UpdateEmailViewModel,
     onShowSnackbar: suspend (String) -> SnackbarResult,
     onNavigateToVerifyEmail: (String) -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
-
-
-    LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let{
-            onShowSnackbar(it)
-            vm.errorMessageShown()
+    LaunchedEffect(uiState.formState) {
+        uiState.let {
+            if (it.formState is FormState.Error) {
+                onShowSnackbar(it.formState.message)
+                viewModel.errorMessageShown()
+            }
         }
     }
 
-    LaunchedEffect(uiState.isSuccess) {
-        uiState.isSuccess?.let{
-            if (it) {
-                onNavigateToVerifyEmail(uiState.email)
-            }
+    LaunchedEffect(uiState.formState) {
+        if (uiState.formState is FormState.Success) {
+            onNavigateToVerifyEmail(uiState.email)
         }
     }
 
@@ -49,31 +49,35 @@ fun UpdateEmailScreen(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Column(
-            modifier = Modifier
-                .width(300.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                "Change Email",
-                fontSize = 35.sp
-            )
-            Text("You'll be signed out of your current account after verification")
-            TextField(
-                value = uiState.email,
-                onValueChange = vm::updateEmail,
-                label = { Text("New email") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Button(
-                onClick = {
-                    vm.updateUserEmail()
-                },
-                modifier = Modifier.fillMaxWidth()
+        if (uiState.formState is FormState.Submitting) {
+            CustomLoadingIndicator()
+        } else {
+            Column(
+                modifier = Modifier
+                    .width(300.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Change email")
+                Text(
+                    "Change Email",
+                    fontSize = 35.sp
+                )
+                Text("You'll be signed out of your current account after verification")
+                TextField(
+                    value = uiState.email,
+                    onValueChange = viewModel::updateEmail,
+                    label = { Text("New email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Button(
+                    onClick = {
+                        viewModel.updateUserEmail()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Change email")
+                }
             }
         }
     }

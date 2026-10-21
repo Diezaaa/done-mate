@@ -28,18 +28,19 @@ import com.google.firebase.auth.EmailAuthProvider
 
 @Composable
 fun VerifyEmailScreen(
-    vm: VerifyEmailViewModel,
+    viewModel: VerifyEmailViewModel,
     onNavigateToTasks: () -> Unit,
     onNavigateBack: () -> Unit,
     emailToVerify: String?,
     onNavigateToSignUp: () -> Unit,
 ) {
-    val uiState by vm.user.collectAsStateWithLifecycle()
+    val uiState by viewModel.user.collectAsStateWithLifecycle()
+
     VerifyEmailScreen(
         uiState = uiState,
         onNavigateToTasks = onNavigateToTasks,
         onNavigateBack = onNavigateBack,
-        onUnlinkAuthProvidersExceptEmail = vm::unlinkAuthProvidersExceptEmail,
+        onUnlinkAuthProvidersExceptEmail = viewModel::unlinkAuthProvidersExceptEmail,
         emailToVerify = emailToVerify,
         onNavigateToSignUp = onNavigateToSignUp
     )
@@ -65,8 +66,8 @@ fun VerifyEmailScreen(
                     }
                 }
 
-                /* TODO: I think this code is redundant because there's no point in navigating
-                 the user back when there's no email. Note that the edit email button doesn't sign out. */
+                /* TODO: I think this code is redundant because there's no point in navigating the user back when there's no email.
+                    Note that the edit email button doesn't sign out. Figure out it later */
                 LaunchedEffect(user) {
                     if (user?.authProviders?.contains(EmailAuthProvider.PROVIDER_ID) == false) {
                         onNavigateBack()

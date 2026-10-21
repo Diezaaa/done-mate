@@ -1,7 +1,6 @@
 package com.example.donemate.ui.screens.preview
 
 import android.net.Uri
-import android.util.Log
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
 import androidx.compose.animation.fadeIn
@@ -80,12 +79,15 @@ fun PreviewScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize()
+    Column(
+        Modifier.fillMaxSize()
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth().padding(10.dp),
-            contentAlignment = Alignment.Center,) {
+                .fillMaxWidth()
+                .padding(10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
                 "Snapping image for ${taskTitle.takeIf { it.isNotBlank() } ?: "unnamed task"}",
                 color = Color.White,
@@ -97,8 +99,8 @@ fun PreviewScreen(
         }
         Box(
             modifier = Modifier
-                .weight(1f).fillMaxWidth()
-            , contentAlignment = Alignment.Center
+                .weight(1f)
+                .fillMaxWidth(), contentAlignment = Alignment.Center
         ) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Box(
@@ -116,7 +118,7 @@ fun PreviewScreen(
                                     // Detect tap for focus
                                     detectTapGestures { tapCoords ->
                                         with(coordinateTransformer) {
-                                            viewModel.tapToFocus(tapCoords.transform())
+                                            viewModel.focus(tapCoords.transform())
                                         }
                                         autofocusRequest = UUID.randomUUID() to tapCoords
                                     }
@@ -137,61 +139,61 @@ fun PreviewScreen(
                                 .offset { autofocusCoords.takeOrElse { Offset.Zero }.round() }
                                 .offset((-24).dp, (-24).dp)
                         ) {
-                            Spacer(Modifier.border(2.dp, Color.White, CircleShape).size(48.dp))
+                            Spacer(
+                                Modifier
+                                    .border(2.dp, Color.White, CircleShape)
+                                    .size(48.dp)
+                            )
                         }
                     }
 
                 }
-}
-
             }
-            val coroutineScope = rememberCoroutineScope()
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .padding(horizontal = 16.dp),
+        }
+        val coroutineScope = rememberCoroutineScope()
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+                .padding(horizontal = 16.dp),
+        ) {
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        val uri = viewModel.capture()
+                        onNavigateToTask(uri)
+                    }
+                },
+                modifier = Modifier.align(Alignment.Center)
             ) {
-                // Centered button (on the left)
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            val uri = viewModel.capture()
-                            Log.d("uri", uri.toString())
-                            onNavigateToTask(uri)
-
-                        }
-                  },
-                    modifier = Modifier.align(Alignment.Center)
-                ) {
-                    Text("Set this as task image")
-                }
-
-                Text(
-                    text = "${"%.1f".format(uiState.zoomRatio.toDouble())}x",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .background(
-                            Color.Black.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-                Icon(
-                    imageVector = if (uiState.torchOn) {
-                        Icons.Default.FlashlightOn
-                    } else {
-                        Icons.Default.FlashlightOff
-                    }, contentDescription = if (uiState.torchOn) "Flashlight On" else "Flashlight Off",
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clickable{viewModel.toggleTorch()}
-                        .align(Alignment.CenterStart)
-                )
+                Text("Set this as task image")
             }
 
+            Text(
+                text = "${"%.1f".format(uiState.zoomRatio.toDouble())}x",
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .background(
+                        Color.Black.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+            Icon(
+                imageVector = if (uiState.torchOn) {
+                    Icons.Default.FlashlightOn
+                } else {
+                    Icons.Default.FlashlightOff
+                }, contentDescription = if (uiState.torchOn) "Flashlight On" else "Flashlight Off",
+                modifier = Modifier
+                    .size(30.dp)
+                    .clickable { viewModel.toggleTorch() }
+                    .align(Alignment.CenterStart)
+            )
+        }
     }
 }

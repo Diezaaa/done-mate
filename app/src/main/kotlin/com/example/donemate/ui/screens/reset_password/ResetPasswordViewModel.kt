@@ -19,21 +19,23 @@ class ResetPasswordViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     fun updateEmail(email: String) {
-        _uiState.value = _uiState.value.copy(email = email)
+        _uiState.update {
+            it.copy(email = email)
+        }
     }
 
     fun sendPasswordResetEmail() {
         viewModelScope.launch {
             when (val result = accountRepository.sendPasswordResetEmail(_uiState.value.email)) {
                 is AuthResult.Success -> {
-                    _uiState.update { currentState ->
-                        currentState.copy(isSent = true)
+                    _uiState.update {
+                        it.copy(isSent = true)
                     }
                 }
 
                 is AuthResult.Error -> {
-                    _uiState.update { currentState ->
-                        currentState.copy(errorMessage = result.message)
+                    _uiState.update {
+                        it.copy(errorMessage = result.message)
                     }
                 }
             }
@@ -41,9 +43,11 @@ class ResetPasswordViewModel @Inject constructor(
     }
 
     fun errorMessageShown() {
-        _uiState.value = _uiState.value.copy(
-            errorMessage = null
-        )
+        _uiState.update {
+            it.copy(
+                errorMessage = null
+            )
+        }
     }
 }
 

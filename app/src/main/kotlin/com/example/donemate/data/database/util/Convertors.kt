@@ -1,16 +1,16 @@
 package com.example.donemate.data.database.util
 
 import androidx.room.TypeConverter
-import java.time.Instant
+import kotlin.time.Instant
 
 class Converters {
     @TypeConverter
     fun fromInstant(value: Instant?): Long? {
-        return value?.toEpochMilli()
+        return value?.toEpochMilliseconds()
     }
 
     @TypeConverter
     fun toInstant(value: Long?): Instant? {
-        return value?.let { Instant.ofEpochMilli(it) }
+        return value?.let { Instant.fromEpochMilliseconds(it) }
     }
 }

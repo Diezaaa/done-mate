@@ -5,66 +5,80 @@ import androidx.lifecycle.viewModelScope
 import com.example.donemate.data.common.Result
 import com.example.donemate.data.model.Task
 import com.example.donemate.data.repository.offline_first.TasksRepository
+import com.example.donemate.network.NetworkMonitor
 import com.example.donemate.ui.common.SortingType
 import com.example.donemate.ui.common.TasksUiState
-import com.example.donemate.ui.common.updateIfSuccess
+import com.example.donemate.ui.common.searchFilterAndSortTasks
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ArchiveViewModel @Inject constructor(
-    private val tasksRepository: TasksRepository
+    private val tasksRepository: TasksRepository,
+    networkMonitor: NetworkMonitor
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<TasksUiState>(
-        TasksUiState.Loading
-    ).also { state ->
-        tasksRepository.archivedTasks
-            .onEach { result ->
-                when (result) {
-                    is Result.Success -> {
-                        val current = state.value as? TasksUiState.Success
-
-                        state.value = TasksUiState.Success(
-                            tasks = result.data,
-                            query = current?.query.orEmpty(),
-                            progressFilter = current?.progressFilter ?: -1,
-                            sortingType = current?.sortingType
-                                ?: SortingType.DueDateTime
-                        )
+    private val syncedOnce = MutableStateFlow(false)
+    private val query = MutableStateFlow("")
+    private val progressFilter = MutableStateFlow(-1)
+    private val sortingType = MutableStateFlow(SortingType.DueDateTime)
+    val isOnline = networkMonitor.isOnline
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+    val uiState: StateFlow<TasksUiState> =
+        combine(
+            syncedOnce,
+            tasksRepository.archivedTasks,
+            query,
+            progressFilter,
+            sortingType
+        ) { syncedOnce, archivedTasks, query, progressFilter, sortingType ->
+            when (archivedTasks) {
+                is Result.Success -> {
+                    if (!syncedOnce && archivedTasks.data.isEmpty()) {
+                        TasksUiState.Loading
                     }
-
-                    is Result.Error -> {
-                        state.value = TasksUiState.Error(
-                            message = result.message
+                    else {
+                        TasksUiState.Success(
+                            visibleTasks = archivedTasks.data.searchFilterAndSortTasks(query, progressFilter, sortingType),
+                            query = query,
+                            progressFilter = progressFilter,
+                            sortingType = sortingType
                         )
                     }
                 }
+
+                is Result.Error -> {
+                    TasksUiState.Error(
+                        message = archivedTasks.message
+                    )
+                }
             }
-            .launchIn(viewModelScope)
-    }
-    val uiState = _uiState.asStateFlow()
-
-    fun updateQuery(query: String) {
-        _uiState.updateIfSuccess { currentState ->
-            currentState.copy(query = query)
         }
-    }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = TasksUiState.Loading
+            )
 
-    fun updateSortingType(sortingType: SortingType) {
-        _uiState.updateIfSuccess { currentState ->
-            currentState.copy(sortingType = sortingType)
-        }
+    fun updateQuery(newQuery: String) {
+        query.value = newQuery
     }
 
-    fun updateProgressFilter(progress: Int) {
-        _uiState.updateIfSuccess { currentState ->
-            currentState.copy(progressFilter = progress)
-        }
+    fun updateSortingType(newSortingType: SortingType) {
+        sortingType.value = newSortingType
+    }
+
+    fun updateProgressFilter(newProgressFilter: Int) {
+        progressFilter.value = newProgressFilter
     }
 
     fun updateTaskProgress(task: Task, progress: Int) {
@@ -76,10 +90,13 @@ class ArchiveViewModel @Inject constructor(
 
     fun sync() {
         viewModelScope.launch {
-            _uiState.updateIfSuccess {
-                it.copy(syncingStatus = tasksRepository.sync())
-            }
+            tasksRepository.sync()
+            markSyncedOnceAsTrue()
         }
+    }
+
+    fun markSyncedOnceAsTrue() {
+        syncedOnce.value = true
     }
 
 

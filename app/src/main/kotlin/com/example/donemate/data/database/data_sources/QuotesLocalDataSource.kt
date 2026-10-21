@@ -5,14 +5,17 @@ import com.example.donemate.data.database.model.QuoteEntity
 import kotlinx.coroutines.flow.Flow
 
 interface QuotesLocalDataSource {
-    suspend fun insertAll(quoteEntities: List<QuoteEntity>)
-    suspend fun insert(quoteEntity: QuoteEntity)
+    suspend fun upsertAll(quoteEntities: List<QuoteEntity>)
+    suspend fun upsert(quoteEntity: QuoteEntity)
     fun pagingSource(): PagingSource<Int, QuoteEntity>
-    suspend fun unlike(id: String, updatedAt: Long)
+    suspend fun markAsUnliked(id: String, updatedAt: Long)
+    suspend fun markAsUnlikedAndNeedsSync(id: String, updatedAt: Long)
+    suspend fun markAsLikedAndNeedsSync(id: String, updatedAt: Long)
+    suspend fun getAllQuotes(): List<QuoteEntity>
     suspend fun clearAll()
     suspend fun markAsLiked(id: String, updatedAt: Long)
-    fun getQuotesNeedingSync(): Flow<List<QuoteEntity>>
-    suspend fun markAsNeedsSync(id: String, updatedAt: Long)
+    suspend fun getQuotesNeedingSync(): List<QuoteEntity>
+    suspend fun markAsNeedsSync(id: String)
+    suspend fun markAsNotNeedsSync(id: String)
     fun getLikedQuotes(): Flow<List<QuoteEntity>>
-    fun delete(quoteEntity: QuoteEntity)
 }

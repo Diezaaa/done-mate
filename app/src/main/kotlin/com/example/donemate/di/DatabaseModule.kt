@@ -13,14 +13,13 @@ import jakarta.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): Database {
+    fun providesDatabase(@ApplicationContext context: Context): Database {
         return Room.databaseBuilder(
             context,
             Database::class.java,
-            "donemate_db"
+            "donemate-database"
         )
             .fallbackToDestructiveMigration(false)
             .build()

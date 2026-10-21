@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "finalSchoolDoneMate"
+rootProject.name = "done-mate"
 include(":app")

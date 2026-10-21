@@ -27,8 +27,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.donemate.ui.common.AuthState
 import com.example.donemate.ui.component.AuthForm
 import com.example.donemate.ui.component.ContinueWithGoogleButton
+import com.example.donemate.ui.component.CustomLoadingIndicator
 import com.example.donemate.ui.component.launchContinueWithGoogleBottomSheet
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
@@ -36,7 +38,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun SignInScreen(
     onNavigateToSignUp: () -> Unit,
-    vm: SignInViewModel,
+    viewModel: SignInViewModel,
     onNavigateToResetPassword: () -> Unit,
     onNavigateToTasks: () -> Unit,
     onNavigateToVerifyEmail: (String) -> Unit,
@@ -44,28 +46,30 @@ fun SignInScreen(
 ) {
 
     val context = LocalContext.current
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         delay(2_000.milliseconds)
         launchContinueWithGoogleBottomSheet(context) { result ->
-            vm.continueWithGoogle(result)
+            viewModel.continueWithGoogle(result)
         }
     }
 
-    LaunchedEffect(uiState.authForm.errorMessage) {
-        uiState.authForm.errorMessage?.let {
-            onShowSnackbar(it)
-            vm.errorMessageShown()
+    uiState.let { uiState ->
+        LaunchedEffect(uiState.authState) {
+            uiState.authState.let {
+                if (it is AuthState.Error) {
+                    onShowSnackbar(it.message)
+                    viewModel.errorMessageShown()
+                }
+            }
         }
-    }
-
-
-    LaunchedEffect(uiState.isUserVerified) {
-        if (uiState.isUserVerified == true) {
-            onNavigateToTasks()
-        } else if (uiState.isUserVerified == false){
-            onNavigateToVerifyEmail(uiState.authForm.email)
+        LaunchedEffect(uiState.authState) {
+            if (uiState.authState is AuthState.Verified) {
+                onNavigateToTasks()
+            } else if (uiState.authState is AuthState.Verify) {
+                onNavigateToVerifyEmail(uiState.email)
+            }
         }
     }
 
@@ -81,57 +85,69 @@ fun SignInScreen(
             verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Sign In",
-                fontSize = 35.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            AuthForm(
-                email = uiState.authForm.email,
-                password = uiState.authForm.password,
-                onEmailChange = vm::updateEmail,
-                onPasswordChange = vm::updatePassword
-            )
-            Text(text = "Forgot password?", modifier = Modifier.clickable {
-                onNavigateToResetPassword()
-            }.fillMaxWidth(), textAlign = TextAlign.Start)
-            Button(
-                onClick = {
-                    vm.signInWithEmailAndPassword()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Sign in")
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f)
-                )
+            uiState.let { it ->
+                if (it.authState is AuthState.Authenticating) {
+                    CustomLoadingIndicator()
+                } else {
 
-                Text(
-                    text = "or",
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                )
+                    Text(
+                        "Sign In",
+                        fontSize = 35.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AuthForm(
+                        email = it.email,
+                        password = it.password,
+                        onEmailChange = viewModel::updateEmail,
+                        onPasswordChange = viewModel::updatePassword
+                    )
+                    Text(
+                        text = "Forgot password?", modifier = Modifier
+                            .clickable {
+                                onNavigateToResetPassword()
+                            }
+                            .fillMaxWidth(), textAlign = TextAlign.Start)
 
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            ContinueWithGoogleButton("Continue with Google") {
-                vm.continueWithGoogle(it)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            viewModel.signInWithEmailAndPassword()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Sign in")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f)
+                        )
 
-            Text(
-                text = "Don’t have an account?",
-                modifier = Modifier.clickable {
-                    onNavigateToSignUp()
-                })
+                        Text(
+                            text = "or",
+                            modifier = Modifier.padding(horizontal = 24.dp),
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ContinueWithGoogleButton("Continue with Google") {
+                        viewModel.continueWithGoogle(it)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Don’t have an account?",
+                        modifier = Modifier.clickable {
+                            onNavigateToSignUp()
+                        })
+                }
+            }
         }
     }
 }

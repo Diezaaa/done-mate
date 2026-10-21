@@ -15,7 +15,7 @@ fun RemoteQuote.asEntity() = QuoteEntity(
     content = content,
     author = author,
     isLiked = false,
-    updatedAt = System.currentTimeMillis(),
+    updatedAt = null,
     needsSync = false
 )
 

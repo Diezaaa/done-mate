@@ -31,7 +31,6 @@ class VerifyEmailViewModel @Inject constructor(
             accountRepository.unlinkAuthProvidersExceptEmail()
         }
     }
-
 }
 
 sealed interface VerifyEmailUiState {

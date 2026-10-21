@@ -1,10 +1,8 @@
 package com.example.donemate
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
-import kotlinx.coroutines.flow.collect
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -19,8 +17,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.donemate.MainActivityUiState.Loading
 import com.example.donemate.ui.theme.DoneMateTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -31,7 +27,7 @@ class MainActivity : ComponentActivity() {
     private val mainActivityViewModel: MainActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // TODO: Maybe learn more about splash screens
+        // TODO: Maybe learn more about splash screen
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -46,7 +42,11 @@ class MainActivity : ComponentActivity() {
                 mainActivityViewModel.uiState.onEach {
                     mainActivityUiState = it
                 }
-                    .map { it.isDarkTheme }
+                    .map {
+                        mainActivityUiState.let {
+                            if (it is MainActivityUiState.Success) it.isDarkTheme else false
+                        }
+                    }
                     .distinctUntilChanged()
                     .collect { isDarkTheme ->
                         enableEdgeToEdge(
@@ -63,16 +63,18 @@ class MainActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition {
             mainActivityViewModel.uiState.value.shouldKeepSplashScreen()
         }
+
         setContent {
-            if (mainActivityUiState is MainActivityUiState.Success) {
-                Log.d("MainActivity", mainActivityUiState.userProfile.toString())
-                DoneMateTheme(darkTheme = mainActivityUiState.isDarkTheme) {
-                    DoneMateApp(
-                        userProfile = mainActivityUiState.userProfile,
-                        isUserVerified = mainActivityUiState.isUserVerified,
-                        onOfflineDialogDismiss = mainActivityViewModel::onOfflineDialogDismiss,
-                        offlineDialogShownOnce = mainActivityUiState.isOfflineDialogShownOnce
-                    )
+            mainActivityUiState.let {
+                if (it is MainActivityUiState.Success) {
+                    DoneMateTheme(darkTheme = it.isDarkTheme) {
+                        DoneMateApp(
+                            userProfile = it.userProfile,
+                            isUserVerified = it.isUserVerified,
+                            onOfflineDialogDismiss = mainActivityViewModel::dismissOfflineDialog,
+                            wasOfflineDialogShown = it.wasOfflineDialogShown
+                        )
+                    }
                 }
             }
         }

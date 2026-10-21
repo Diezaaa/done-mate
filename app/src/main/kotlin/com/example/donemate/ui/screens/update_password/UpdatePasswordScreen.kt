@@ -3,8 +3,6 @@ package com.example.donemate.ui.screens.update_password
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
@@ -24,28 +22,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.NavKey
+import com.example.donemate.ui.common.FormState
+import com.example.donemate.ui.component.CustomLoadingIndicator
 
 @Composable
 fun UpdatePasswordScreen(
-    vm: UpdatePasswordViewModel,
+    viewModel: UpdatePasswordViewModel,
     onShowSnackbar: suspend (String) -> SnackbarResult,
     onNavigateToSettings: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let { onShowSnackbar(it) }
-        vm.errorMessageShown()
+    LaunchedEffect(uiState.formState) {
+        uiState.let {
+            if (it.formState is FormState.Error) {
+                onShowSnackbar(it.formState.message)
+                viewModel.errorMessageShown()
+            }
+        }
     }
 
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess == true) {
+    LaunchedEffect(uiState.formState) {
+        if (uiState.formState is FormState.Success) {
             onNavigateToSettings()
         }
     }
+
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.TopStart
@@ -56,7 +59,6 @@ fun UpdatePasswordScreen(
                 contentDescription = "Back"
             )
         }
-        Spacer(modifier = Modifier.width(10.dp))
     }
     Box(
         contentAlignment = Alignment.Center,
@@ -69,34 +71,36 @@ fun UpdatePasswordScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Change Password",
-
-                fontSize = 35.sp
-            )
-            TextField(
-                value = uiState.currentPassword,
-                onValueChange = vm::updateCurrentPassword,
-                label = { Text("Current password") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            TextField(
-                value = uiState.newPassword,
-                onValueChange = vm::updateNewPassword,
-                label = { Text("New password") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Button(
-                onClick = {
-                    vm.updatePassword()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Change password")
+            if (uiState.formState is FormState.Submitting) {
+                CustomLoadingIndicator()
+            } else {
+                Text(
+                    "Change Password",
+                    fontSize = 35.sp
+                )
+                TextField(
+                    value = uiState.currentPassword,
+                    onValueChange = viewModel::updateCurrentPassword,
+                    label = { Text("Current password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                TextField(
+                    value = uiState.newPassword,
+                    onValueChange = viewModel::updateNewPassword,
+                    label = { Text("New password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Button(
+                    onClick = {
+                        viewModel.updatePassword()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Change password")
+                }
             }
         }
-
     }
 }

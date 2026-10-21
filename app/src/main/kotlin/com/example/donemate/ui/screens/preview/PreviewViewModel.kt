@@ -1,13 +1,11 @@
 package com.example.donemate.ui.screens.preview
 
 import android.net.Uri
-import androidx.camera.core.SurfaceRequest
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import com.example.donemate.camera.CameraSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 
@@ -16,8 +14,7 @@ class PreviewViewModel @Inject constructor(
     private val cameraSystem: CameraSystem
 ) : ViewModel() {
 
-    private val _surfaceRequest = cameraSystem.getSurfaceRequest()
-    val surfaceRequest: StateFlow<SurfaceRequest?> = _surfaceRequest
+    val surfaceRequest = cameraSystem.getSurfaceRequest()
     val uiState = cameraSystem.getCurrentCameraState()
 
     suspend fun bindToCamera(lifecycleOwner: LifecycleOwner){
@@ -29,15 +26,16 @@ class PreviewViewModel @Inject constructor(
     }
 
     fun setZoom(scaleFactor: Float){
-        cameraSystem.setZOOM(scaleFactor)
+        cameraSystem.setZoom(scaleFactor)
     }
 
-    fun tapToFocus(transform: Offset) {
+    fun focus(transform: Offset) {
         cameraSystem.focus(transform)
     }
-    suspend fun capture(): Uri {
-        return cameraSystem.onCapture()
-    }
 
+    // TODO: This function violates the UDF pattern. Consider fixing it
+    suspend fun capture(): Uri {
+        return cameraSystem.capture()
+    }
 }
 

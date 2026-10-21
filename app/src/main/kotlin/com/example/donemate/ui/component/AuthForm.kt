@@ -18,7 +18,7 @@ fun AuthForm(
     password: String,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-){
+) {
     Column {
         TextField(
             value = email,

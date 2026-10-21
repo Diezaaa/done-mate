@@ -15,22 +15,21 @@ import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
-    private val preferencesRepository: PreferencesRepository,
-    private val accountRepository: AccountRepository
+    preferencesRepository: PreferencesRepository,
+    accountRepository: AccountRepository
 ) : ViewModel() {
-
-    private val isOfflineDialogShownOnce = MutableStateFlow(false)
+    private val wasOfflineDialogShown = MutableStateFlow(false)
 
     val uiState: StateFlow<MainActivityUiState> = combine(
         preferencesRepository.isDarkTheme,
         accountRepository.userProfile,
-        isOfflineDialogShownOnce,
+        wasOfflineDialogShown,
         accountRepository.isUserVerified
-    ) { isDarkTheme, userProfile, isOfflineDialogShownOnce, isUserVerified ->
+    ) { isDarkTheme, userProfile, wasOfflineDialogShown, isUserVerified ->
         MainActivityUiState.Success(
             userProfile = userProfile,
             isDarkTheme = isDarkTheme,
-            isOfflineDialogShownOnce = isOfflineDialogShownOnce,
+            wasOfflineDialogShown = wasOfflineDialogShown,
             isUserVerified = isUserVerified
         )
     }.stateIn(
@@ -39,24 +38,21 @@ class MainActivityViewModel @Inject constructor(
         initialValue = MainActivityUiState.Loading
     )
 
-    fun onOfflineDialogDismiss() {
-        isOfflineDialogShownOnce.value = true
+    fun dismissOfflineDialog() {
+        wasOfflineDialogShown.value = true
     }
 }
 
 sealed interface MainActivityUiState {
     data object Loading : MainActivityUiState
     data class Success(
-        override val userProfile: User?,
-        override val isDarkTheme: Boolean,
-        override val isOfflineDialogShownOnce: Boolean,
-        override val isUserVerified: Boolean?
+        val userProfile: User?,
+        val isDarkTheme: Boolean,
+        val wasOfflineDialogShown: Boolean,
+        val isUserVerified: Boolean?
     ) : MainActivityUiState
 
-    val userProfile: User? get() = null
-    val isDarkTheme: Boolean get() = false
-    val isUserVerified: Boolean? get() = null
-    val isOfflineDialogShownOnce: Boolean get() = false
-
-    fun shouldKeepSplashScreen(): Boolean { return this is Loading }
+    fun shouldKeepSplashScreen(): Boolean {
+        return this is Loading
+    }
 }

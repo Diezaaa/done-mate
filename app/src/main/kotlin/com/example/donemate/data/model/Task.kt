@@ -2,8 +2,8 @@ package com.example.donemate.data.model
 
 import com.example.donemate.data.remote.model.RemoteTask
 import com.example.donemate.data.database.model.TaskEntity
-import java.time.Instant
 import java.util.UUID
+import kotlin.time.Instant
 
 enum class Progress(val value: Int, val label: String) {
     NOT_STARTED(0, "Not Started"),
@@ -24,9 +24,10 @@ data class Task (
     val reminderDateTime: Instant? = null,
     val dueDateTime: Instant? = null,
     val progress: Int = Progress.NOT_STARTED.value,
-    var imageUri: String? = null,
+    val imageUri: String? = null,
     val updateTime: Instant? = null,
-    val description: String? = ""
+    val description: String? = "",
+    val isArchived: Boolean = false
 )
 
 fun RemoteTask.asEntity() = TaskEntity(
@@ -37,8 +38,8 @@ fun RemoteTask.asEntity() = TaskEntity(
     userId = userId,
     updatedAt = updatedAt,
     needsSync = false,
-    reminderDateTime = if (reminderDateTime != null) Instant.ofEpochMilli(reminderDateTime) else null,
-    dueDateTime = if (dueDateTime != null) Instant.ofEpochMilli(dueDateTime) else null,
+    reminderDateTime = if (reminderDateTime != null) Instant.fromEpochMilliseconds(reminderDateTime) else null,
+    dueDateTime = if (dueDateTime != null) Instant.fromEpochMilliseconds(dueDateTime) else null,
     description = description,
     isArchived = wasArchived
 )
@@ -50,8 +51,9 @@ fun TaskEntity.asExternalModel() = Task(
     dueDateTime = dueDateTime,
     imageUri = imageUri,
     progress = progress,
-    updateTime = Instant.ofEpochMilli(updatedAt),
+    updateTime = Instant.fromEpochMilliseconds(updatedAt),
     description = description,
+    isArchived = isArchived
 )
 
 fun Task.asEntity(userId: String) = TaskEntity(
@@ -65,5 +67,6 @@ fun Task.asEntity(userId: String) = TaskEntity(
     updatedAt = System.currentTimeMillis(),
     isDeleted = false,
     needsSync = true,
-    description = description
+    description = description,
+    isArchived = isArchived
 )

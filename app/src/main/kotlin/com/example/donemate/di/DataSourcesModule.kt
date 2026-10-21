@@ -26,22 +26,22 @@ import retrofit2.Retrofit
 abstract class DataSourcesModule {
 
     @Binds
-    abstract fun bindPreferencesLocalDataSource(
+    abstract fun bindsPreferencesLocalDataSource(
         defaultPreferencesLocalDataSource: DefaultPreferencesLocalDataSource
     ): PreferencesLocalDataSource
 
     @Binds
-    abstract fun bindTaskImagesRemoteDataSource(
+    abstract fun bindsTaskImagesRemoteDataSource(
         defaultTaskImagesRemoteDataSource: DefaultTaskImagesRemoteDataSource
     ): TaskImagesRemoteDataSource
 
     @Binds
-    abstract fun bindTasksRemoteDataSource(
+    abstract fun bindsTasksRemoteDataSource(
         defaultTasksRemoteDataSource: DefaultTasksRemoteDataSource
     ): TasksRemoteDataSource
 
     @Binds
-    abstract fun bindLikedQuoteRecordsRemoteDataSource(
+    abstract fun bindsLikedQuoteRecordsRemoteDataSource(
         defaultLikedQuoteRecordsRemoteDataSource: DefaultLikedQuoteRecordsRemoteDataSource
     ): LikedQuoteRecordsRemoteDataSource
 }
@@ -52,30 +52,23 @@ abstract class DataSourcesModule {
 object DataSourcesProvidersModule {
 
     @Provides
-    fun provideTasksLocalDataSource(
+    fun providesTasksLocalDataSource(
         database: Database
     ): TasksLocalDataSource {
         return database.defaultTasksLocalDataSource()
     }
 
     @Provides
-    fun provideRemoteKeyLocalDataSource(
+    fun providesRemoteKeyLocalDataSource(
         database: Database
     ): RemoteKeyLocalDataSource {
         return database.defaultRemoteKeyLocalDataSource()
     }
 
     @Provides
-    fun provideQuotesLocalDataSource(
+    fun providesQuotesLocalDataSource(
         database: Database
     ): QuotesLocalDataSource {
         return database.defaultQuotesLocalDataSource()
-    }
-
-    @Provides
-    fun provideQuotesRemoteDataSource(
-        retrofit: Retrofit
-    ): QuotesApi {
-        return retrofit.create(DefaultQuotesApi::class.java)
     }
 }

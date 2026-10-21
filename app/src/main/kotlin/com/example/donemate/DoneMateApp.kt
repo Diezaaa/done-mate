@@ -4,24 +4,18 @@ import android.net.Uri
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.exclude
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import com.example.donemate.ui.screens.verify_email.VerifyEmailScreen
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -38,14 +32,12 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -78,14 +70,10 @@ import com.example.donemate.ui.screens.task.TaskViewModel
 import com.example.donemate.ui.screens.verify_email.VerifyEmailViewModel
 import kotlin.collections.contains
 import kotlin.collections.removeLastOrNull
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.unit.sp
 
 @Serializable
 data object SignUp : NavKey
 
-// Learn more about @Serializable
 @Serializable
 enum class VerifyEmailPreviousEntry {
     SIGN_IN,
@@ -157,14 +145,16 @@ fun DoneMateApp(
     userProfile: User?,
     isUserVerified: Boolean?,
     onOfflineDialogDismiss: () -> Unit,
-    offlineDialogShownOnce: Boolean,
+    wasOfflineDialogShown: Boolean
 ) {
     var sessionCapturedUri by rememberSaveable { mutableStateOf<String?>(null) }
     val backStack = rememberNavBackStack(
         when (isUserVerified) {
+            null -> SignIn
             true -> Tasks
             false -> {
                 userProfile?.email.let {
+                    // TODO: Consider combining isUserVerified into userProfile in order to eliminate checking for null userProfile when isUserVerified is false
                     if (it == null) SignIn
                     else {
                         VerifyEmail(
@@ -174,14 +164,10 @@ fun DoneMateApp(
                     }
                 }
             }
-
-            else -> {
-                SignUp
-            }
         }
     )
+
     val currentDestination = backStack.lastOrNull()
-    val showBottomBar = currentDestination in TOP_LEVEL_ROUTES
     val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(currentDestination) {
@@ -201,7 +187,7 @@ fun DoneMateApp(
 
     Scaffold(
         bottomBar = {
-            if (showBottomBar) {
+            if (currentDestination in TOP_LEVEL_ROUTES) {
                 NavigationBar {
                     TOP_LEVEL_ROUTES.forEach { topLevelRoute ->
                         val isSelected = topLevelRoute == currentDestination
@@ -246,8 +232,9 @@ fun DoneMateApp(
             entryProvider = entryProvider {
                 entry<SignIn> {
                     val viewModel = hiltViewModel<SignInViewModel>()
+
                     SignInScreen(
-                        vm = viewModel,
+                        viewModel = viewModel,
                         onNavigateToResetPassword = {
                             backStack.add(ResetPassword)
                         },
@@ -270,9 +257,10 @@ fun DoneMateApp(
                 }
                 entry<SignUp> {
                     val viewModel = hiltViewModel<SignUpViewModel>()
+
                     SignUpScreen(
                         onNavigateToSignIn = { backStack.add(SignIn) },
-                        vm = viewModel,
+                        viewModel = viewModel,
                         onNavigateToTasks = {
                             setEntryAsRoot(backStack, Tasks)
                         },
@@ -289,6 +277,7 @@ fun DoneMateApp(
                 }
                 entry<Tasks> {
                     val viewModel = hiltViewModel<TasksViewModel>()
+
                     TasksScreen(
                         onNavigateToAdd = {
                             backStack.add(
@@ -304,16 +293,17 @@ fun DoneMateApp(
                                 )
                             )
                         },
-                        vm = viewModel,
-                        isOfflineDialogShownOnce = offlineDialogShownOnce,
-                        onOfflineDialogDismiss = onOfflineDialogDismiss,
+                        viewModel = viewModel,
                         onNavigateToArchive = {
                             backStack.add(Archive)
-                        }
+                        },
+                        wasOfflineDialogShown = wasOfflineDialogShown,
+                        onOfflineDialogDismiss = onOfflineDialogDismiss
                     )
                 }
                 entry<Task> { key ->
-                    val vm = hiltViewModel<TaskViewModel>()
+                    val viewModel = hiltViewModel<TaskViewModel>()
+
                     TaskScreen(
                         onNavigateToTasks = {
                             backStack.removeLastOrNull()
@@ -326,11 +316,11 @@ fun DoneMateApp(
                         },
                         id = key.id,
                         cameraImageUri = sessionCapturedUri ?: key.uri,
-                        vm = vm
+                        viewModel = viewModel
                     )
                 }
                 entry<Settings> {
-                    val vm = hiltViewModel<SettingsViewModel>()
+                    val viewModel = hiltViewModel<SettingsViewModel>()
 
                     SettingsScreen(
                         onNavigateToLinkEmail = {
@@ -342,7 +332,7 @@ fun DoneMateApp(
                         onNavigateToUpdateEmail = {
                             backStack.add(UpdateEmail)
                         },
-                        vm = vm,
+                        viewModel = viewModel,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
                         },
@@ -352,10 +342,10 @@ fun DoneMateApp(
                     )
                 }
                 entry<LinkEmail> {
-                    val vm = hiltViewModel<LinkEmailViewModel>()
+                    val viewModel = hiltViewModel<LinkEmailViewModel>()
 
                     LinkEmailScreen(
-                        vm = vm,
+                        viewModel = viewModel,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
                         },
@@ -368,20 +358,20 @@ fun DoneMateApp(
                     )
                 }
                 entry<ResetPassword> {
-                    val vm = hiltViewModel<ResetPasswordViewModel>()
+                    val viewModel = hiltViewModel<ResetPasswordViewModel>()
 
                     ResetPasswordScreen(
-                        vm = vm,
+                        viewModel = viewModel,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
                         }
                     )
                 }
                 entry<UpdatePassword> {
-                    val vm = hiltViewModel<UpdatePasswordViewModel>()
+                    val viewModel = hiltViewModel<UpdatePasswordViewModel>()
 
                     UpdatePasswordScreen(
-                        vm = vm,
+                        viewModel = viewModel,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
                         },
@@ -402,23 +392,26 @@ fun DoneMateApp(
                     )
                 }
                 entry<Preview> { key ->
-                    val vm = hiltViewModel<PreviewViewModel>()
+                    val viewModel = hiltViewModel<PreviewViewModel>()
+
                     PreviewScreen(
                         taskTitle = key.taskTitle,
-                        viewModel = vm,
+                        viewModel = viewModel,
                         onNavigateToTask = { uri: Uri ->
                             sessionCapturedUri = uri.toString()
                             backStack.removeLastOrNull()
                         })
                 }
                 entry<Inspiration> {
-                    val vm = hiltViewModel<InspirationViewModel>()
-                    InspirationScreen(vm = vm)
+                    val viewModel = hiltViewModel<InspirationViewModel>()
+
+                    InspirationScreen(viewModel = viewModel)
                 }
                 entry<UpdateEmail> {
-                    val vm = hiltViewModel<UpdateEmailViewModel>()
+                    val viewModel = hiltViewModel<UpdateEmailViewModel>()
+
                     UpdateEmailScreen(
-                        vm = vm,
+                        viewModel = viewModel,
                         onShowSnackbar = { message: String ->
                             snackBarHostState.showSnackbar(message)
                         },
@@ -427,14 +420,14 @@ fun DoneMateApp(
                                 backStack,
                                 VerifyEmailPreviousEntry.UPDATE_EMAIL, it
                             )
-                        },
-
-                        )
+                        }
+                    )
                 }
                 entry<VerifyEmail> { key ->
-                    val vm = hiltViewModel<VerifyEmailViewModel>()
+                    val viewModel = hiltViewModel<VerifyEmailViewModel>()
+
                     VerifyEmailScreen(
-                        vm = vm,
+                        viewModel = viewModel,
                         onNavigateToTasks = {
                             backStack.add(Tasks)
                         },
@@ -455,7 +448,8 @@ fun DoneMateApp(
                     )
                 }
                 entry<Archive> {
-                    val vm = hiltViewModel<ArchiveViewModel>()
+                    val viewModel = hiltViewModel<ArchiveViewModel>()
+
                     ArchiveScreen(
                         onNavigateToEdit = { id ->
                             backStack.add(
@@ -464,12 +458,12 @@ fun DoneMateApp(
                                 )
                             )
                         },
-                        vm = vm,
-                        isOfflineDialogShownOnce = offlineDialogShownOnce,
-                        onOfflineDialogDismiss = onOfflineDialogDismiss,
+                        viewModel = viewModel,
                         onNavigateToTasks = {
                             backStack.removeLastOrNull()
-                        }
+                        },
+                        wasOfflineDialogShown = wasOfflineDialogShown,
+                        onOfflineDialogDismiss = onOfflineDialogDismiss,
                     )
                 }
             }

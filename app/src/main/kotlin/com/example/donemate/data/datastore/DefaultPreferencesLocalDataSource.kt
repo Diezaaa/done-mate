@@ -13,10 +13,11 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO: Add error handling
 @Singleton
 class DefaultPreferencesLocalDataSource @Inject constructor(
     private val dataStore: DataStore<Preferences>
-): PreferencesLocalDataSource {
+) : PreferencesLocalDataSource {
     // TODO: add file corruption handling, guide link: https://developer.android.com/topic/libraries/architecture/datastore#handle-file-corruption
     override val isDarkTheme: Flow<Boolean> = dataStore.data
         .catch { exception ->
@@ -30,13 +31,12 @@ class DefaultPreferencesLocalDataSource @Inject constructor(
             preferences[IS_DARK_THEME] ?: false
         }
 
-    override suspend fun changeTheme(isDarkTheme: Boolean){
+    override suspend fun changeTheme(isDarkTheme: Boolean) {
         try {
             dataStore.edit { preferences ->
                 preferences[IS_DARK_THEME] = isDarkTheme
             }
-        }
-        catch (e: IOException) {
+        } catch (e: IOException) {
             Log.e("DefaultPreferencesLocalDataSource", "Failed to change theme", e)
         }
     }

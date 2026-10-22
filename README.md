@@ -42,8 +42,6 @@ Note: The app was tested on a physical phone (Google Pixel 7) and on an emulated
 
 Note: It's recommended to run the app on Google Pixel 10 Pro or Google Pixel 7 running Android 17.
 
-Note: The user cannot write using Hebrew in the app. Only English typing was tested.
-
 ### Link to the app as an installable file on a phone
 
 Link to Google Drive: https://drive.google.com/drive/folders/1zkqrfQI2WlbRyjgj1tr_K5FI07i0PZ_U?usp=sharing
@@ -147,10 +145,6 @@ Firebase Local Emulator Suite was used to emulate all Firebase services while de
 ## Known Issues
 
 There are some known issues that need to be addressed in future updates.
-
-- The user cannot write using Hebrew in the app. Only English typing was tested.
-
-- If the system language is set to Hebrew, the text in the app might be displayed incorrectly.
 
 - Changing password while using a slow internet connection causes logging out from the account.
 

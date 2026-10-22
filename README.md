@@ -4,7 +4,7 @@ An offline-first task management app with motivating elements.
 
 ## Demonstration Videos
 
-Note: the quick demonstration video doesn't show the whole app functionality
+Note: the quick demonstration video doesn't show the whole app functionality.
 
 Quick demonstration video: https://youtu.be/uwmiUMOx60w?si=d-fuB3J8I7QNXDK6  
 
@@ -24,9 +24,9 @@ The following image is featuring the Tasks and Inspiration screens that are part
 
 - Custom camera interface: capturing an image using the camera of the device is done on a custom-built screen.
 
-- Reminders: The user can set reminders for tasks. A reminder will appear as a notification on the specified date and time.
+- Reminders: the user can set reminders for tasks. A reminder will appear as a notification on the specified date and time.
 
-- Inspiration screen:  an endless scrollable feed of motivational quotes that are also accessible offline. The user can like quotes he likes and access the liked quotes on other devices.
+- Inspiration screen: an endless scrollable feed of motivational quotes that are also accessible offline. The user can like quotes he likes and access the liked quotes on other devices.
 
 - Appearance: choosing between a dark or light theme.
 
@@ -96,7 +96,7 @@ ViewModel
 
         
 
-Use Cases (Domain Layer)    
+Use Cases (Domain Layer)     
 
   :arrow_down:
 
@@ -114,7 +114,7 @@ In order to simplify providing dependencies and follow current industry standard
 
 The UI layer follows the UDF pattern (Unidirectional Data Flow) that makes debugging easier.
 
-The app is fully offline-first. The user is able to create/edit/delete tasks while offline, and when the device is online, the changes will be synced. Also, all the liked quotes are synced with other devices. The offline-first approach was implemented using Room (for local persistence), Firebase Firestore (for storing data remotely), and Firebase Storage (for storing tasks' images remotely; Firebase Firestore isn't suitable for storing images)
+The app is fully offline-first. The user is able to create/edit/delete tasks while offline, and when the device is online, the changes will be synced. Also, all the liked quotes are synced with other devices. The offline-first approach was implemented using Room (for local persistence), Firebase Firestore (for storing data remotely), and Firebase Storage (for storing tasks' images remotely; Firebase Firestore isn't suitable for storing images).
 
 The project is a single activity application. Navigation is done using Jetpack Navigation 3.
 
@@ -138,9 +138,9 @@ Firebase Local Emulator Suite was used to emulate all Firebase services while de
 
 - The project injects dependencies using Hilt, which is the industry standard nowadays. No manual DI was used.
 
-- Navigation was fully built with Jetpack Navigation 3. The third version of Jetpack navigation is the latest version of Jetpack Navigation. At the beginning of the project, the navigation was built using Jetpack Navigation 2.
+- Navigation was fully built with Jetpack Navigation 3. The third version of Jetpack Navigation is the latest version of Jetpack Navigation. At the beginning of the project, the navigation was built using Jetpack Navigation 2.
 
-- There are screens that use the LCE (Loading/Content/Error) approach, e.g., tasks and inspiration screens 
+- There are screens that use the LCE (Loading/Content/Error) approach, e.g., tasks and inspiration screens. 
 
 - I implemented error messages on some screens, e.g., an error message appears in the Inspiration screen if the quotes API is down.
 
@@ -154,7 +154,7 @@ There are some known issues that need to be addressed in future updates.
 
 - Changing password while using a slow internet connection causes logging out from the account.
 
-- A task isn't deleted after deleting it and immediately changing its progress using a notification
+- A task isn't deleted after deleting it and immediately changing its progress using a notification.
 
 - The camera's preview becomes black after revoking the camera permission. In addition, the user isn't redirected to the task form.
 

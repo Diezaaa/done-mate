@@ -1,6 +1,6 @@
 # Done Mate
 
-An offline-first task management with motivating elements.
+An offline-first task management app with motivating elements.
 
 ## Demonstration Videos
 
@@ -130,17 +130,17 @@ Firebase Local Emulator Suite was used to emulate all Firebase services while de
 
 - The app asks for camera permission to capture images for tasks. In addition, alarm and reminder permission and notification permission are requested in order to remind the user about his tasks.
 
-- No even one single line of code in Java was written. The project uses Kotlin, coroutines, and flows.
+- Not even one single line of code in Java was written. The project uses Kotlin, coroutines, and flows.
 
 - The app features an endless feed of motivational quotes that is also offline-first, meaning that the quotes are persisted in the local storage and it's possible to view them offline. This is done using the Paging3 library for getting pages of quotes, Retrofit for requesting the data from the server, and Room for persisting the quotes on the device and viewing them in offline mode.
 
-- The authentication system was made using Firebase Authenticaton.
+- The authentication system was made using Firebase Authentication.
 
 - The project injects dependencies using Hilt, which is the industry standard nowadays. No manual DI was used.
 
 - Navigation was fully built with Jetpack Navigation 3. The third version of Jetpack navigation is the latest version of Jetpack Navigation. At the beginning of the project, the navigation was built using Jetpack Navigation 2.
 
-- There are screens that use the LCE (Loading Content Error) approach, e.g., tasks and inspiration screens 
+- There are screens that use the LCE (Loading/Content/Error) approach, e.g., tasks and inspiration screens 
 
 - I implemented error messages on some screens, e.g., an error message appears in the Inspiration screen if the quotes API is down.
 

@@ -70,6 +70,10 @@ Link to Google Drive: https://drive.google.com/drive/folders/1zkqrfQI2WlbRyjgj1t
 
 - Jetpack DataStore
 
+- AlarmManager
+
+- SQL
+
 - Git & GitHub
 
 - Material Design 3
@@ -79,6 +83,8 @@ Link to Google Drive: https://drive.google.com/drive/folders/1zkqrfQI2WlbRyjgj1t
 - Firebase Local Emulator Suite
 
 - Paging 3
+
+- Android Studio
 
 ## Architecture
 
